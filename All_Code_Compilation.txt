@@ -1,0 +1,4297 @@
+====================================================================================================
+                                          CODE COMPILATION
+                             Complete source listing - four lab courses
+====================================================================================================
+
+  Part 1  Cryptography & Network Security
+           F:\crypto   |   17 files   |   1,912 lines
+  Part 2  Distributed Database Management Systems
+           F:\ddbms   |   6 files   |   520 lines
+  Part 3  Computer Graphics
+           F:\graphics   |   14 files   |   1,074 lines
+  Part 4  Machine Learning
+           F:\ML   |   2 files   |   381 lines
+
+  39 source files   |   3,887 lines of code
+  Encoding: UTF-8
+
+
+====================================================================================================
+CONTENTS
+====================================================================================================
+
+1. Cryptography & Network Security
+    1.1    README.txt                                                   49 lines
+    1.2    main.py                                                     134 lines
+    1.3    p01_caesar.py                                                70 lines
+    1.4    p02_polygram.py                                             100 lines
+    1.5    p03_transposition.py                                         91 lines
+    1.6    p04_double_transposition.py                                  70 lines
+    1.7    p05_one_time_pad.py                                          98 lines
+    1.8    p06_lehmann.py                                               83 lines
+    1.9    p07_rabin_miller.py                                         107 lines
+    1.10   p08_md5.py                                                  140 lines
+    1.11   p09_sha1.py                                                 120 lines
+    1.12   p10_rsa.py                                                  144 lines
+    1.13   p11_diffie_hellman.py                                       115 lines
+    1.14   p12_pgp_transmit.py                                         129 lines
+    1.15   p13_pgp_storage.py                                          119 lines
+    1.16   p14_pgp_combined.py                                         136 lines
+    1.17   pgp_core.py                                                 207 lines
+
+2. Distributed Database Management Systems
+    2.1    commands.txt                                                 85 lines
+    2.2    WordCount.java                                              142 lines
+    2.3    hive_distributed_query\step.txt                               9 lines
+    2.4    hive_distributed_query\create folder.txt                     56 lines
+    2.5    hive_distributed_query\all_commands.txt                     138 lines
+    2.6    hive_distributed_query\CREATE TABLE Customer.txt             90 lines
+
+3. Computer Graphics
+    3.1    01_translation.py                                            42 lines
+    3.2    01_translation_anim.py                                      100 lines
+    3.3    02_rotation.py                                               44 lines
+    3.4    02_rotation_anim.py                                          97 lines
+    3.5    03_scaling.py                                                38 lines
+    3.6    03_scaling_anim.py                                           93 lines
+    3.7    04_bresenham.py                                              60 lines
+    3.8    04_bresenham_anim.py                                        119 lines
+    3.9    05_dda.py                                                    43 lines
+    3.10   05_dda_anim.py                                              103 lines
+    3.11   06_cohen_sutherland.py                                       70 lines
+    3.12   06_cohen_sutherland_anim.py                                 164 lines
+    3.13   07_koch_curve.py                                             35 lines
+    3.14   07_koch_curve_anim.py                                        66 lines
+
+4. Machine Learning
+    4.1    supervised_all.py                                           198 lines
+    4.2    unsupervised_all.py                                         183 lines
+
+
+
+####################################################################################################
+#                            PART 1  -  CRYPTOGRAPHY & NETWORK SECURITY                            #
+#          Classical ciphers, primality tests, hash functions, public-key crypto and PGP.          #
+#                              17 files  |  1,912 lines  |  F:\crypto                              #
+####################################################################################################
+
+
+====================================================================================================
+ 1.1  README.txt
+ F:\crypto\README.txt
+ Notes / Commands  |  49 lines  |  2.1 KB
+====================================================================================================
+
+CSE-4232P  CRYPTOGRAPHY AND NETWORK SECURITY — LAB
+B.Sc. Engg. Part 4, Even Semester
+Department of Computer Science and Engineering, University of Rajshahi
+
+HOW TO RUN
+----------
+  python3 main.py          -> interactive menu, pick a program 01-14
+  python3 main.py 8        -> run program 8 directly
+  python3 main.py test     -> run all 14 with default inputs (self-test)
+
+  Any program can also be run on its own:
+      python3 p10_rsa.py
+
+  Pressing Enter at any prompt uses the default value shown in brackets.
+
+FILES
+-----
+  main.py                     menu runner and self-test
+  p01_caesar.py               1. Caesar cipher
+  p02_polygram.py             2. Polygram substitution (block size 3)
+  p03_transposition.py        3. Transposition cipher (width as input)
+  p04_double_transposition.py 4. Double transposition
+  p05_one_time_pad.py         5. One-time pad (reads keyfile.txt)
+  p06_lehmann.py              6. Lehmann primality test
+  p07_rabin_miller.py         7. Rabin-Miller primality test
+  p08_md5.py                  8. MD5, implemented from scratch
+  p09_sha1.py                 9. SHA-1, implemented from scratch
+  p10_rsa.py                 10. RSA encryption / decryption
+  p11_diffie_hellman.py      11. Diffie-Hellman key exchange
+  p12_pgp_transmit.py        12. PGP: auth + confidentiality (transmit)
+  p13_pgp_storage.py         13. PGP: auth + confidentiality (storage)
+  p14_pgp_combined.py        14. PGP: storage + auth & confidentiality
+  pgp_core.py                shared PGP engine used by 12, 13, 14
+  keyfile.txt                random key letters for the one-time pad
+
+REQUIREMENTS
+------------
+  Python 3.6 or newer. Standard library only — nothing to install.
+
+NOTES
+-----
+  MD5 and SHA-1 are written out step by step, NOT imported from hashlib.
+  Each program checks its own result against hashlib and prints
+  VERIFICATION: SUCCESS, so the implementation is provably correct.
+
+  Programs 12-14 use a keystream cipher in place of CAST-128, which is
+  not in the Python standard library. The PGP STRUCTURE — the order of
+  sign, compress, encrypt, radix-64, segment — is identical either way,
+  and that structure is what the lab is testing.
+
+
+====================================================================================================
+ 1.2  main.py
+ F:\crypto\main.py
+ Python  |  134 lines  |  4.5 KB
+====================================================================================================
+
+#!/usr/bin/env python3
+"""
+main.py — Lab runner
+CSE-4232P (Cryptography and Network Security)
+B.Sc. Engg. Part 4, Even Semester — University of Rajshahi
+
+Run this file and pick a program number from the menu:
+
+    python3 main.py            interactive menu
+    python3 main.py 8          run program 8 directly
+    python3 main.py test       run every program with default inputs
+"""
+
+import io
+import sys
+import traceback
+import contextlib
+
+PROGRAMS = [
+    ("01", "Caesar Cipher",                          "p01_caesar"),
+    ("02", "Polygram Substitution Cipher (block 3)", "p02_polygram"),
+    ("03", "Transposition Cipher",                   "p03_transposition"),
+    ("04", "Double Transposition Cipher",            "p04_double_transposition"),
+    ("05", "One-Time Pad",                           "p05_one_time_pad"),
+    ("06", "Lehmann Primality Test",                 "p06_lehmann"),
+    ("07", "Rabin-Miller Primality Test",            "p07_rabin_miller"),
+    ("08", "MD5 Hash Function",                      "p08_md5"),
+    ("09", "SHA-1 Hash Function",                    "p09_sha1"),
+    ("10", "RSA Encryption / Decryption",            "p10_rsa"),
+    ("11", "Diffie-Hellman Key Exchange",            "p11_diffie_hellman"),
+    ("12", "PGP — Auth + Confidentiality (transmit)", "p12_pgp_transmit"),
+    ("13", "PGP — Auth + Confidentiality (storage)",  "p13_pgp_storage"),
+    ("14", "PGP — Storage + Auth & Confidentiality",  "p14_pgp_combined"),
+]
+
+
+def banner():
+    print("\n" + "=" * 62)
+    print("  CSE-4232P  CRYPTOGRAPHY AND NETWORK SECURITY — LAB")
+    print("  B.Sc. Engg. Part 4, Even Semester")
+    print("  Department of Computer Science and Engineering")
+    print("  University of Rajshahi")
+    print("=" * 62)
+
+
+def menu():
+    print("\n  AVAILABLE PROGRAMS\n")
+    for num, title, _ in PROGRAMS:
+        print(f"    {num}.  {title}")
+    print("\n     t.  Run ALL programs with default inputs (self-test)")
+    print("     q.  Quit")
+
+
+def run(module_name):
+    """Import the module fresh and call its main()."""
+    import importlib
+    if module_name in sys.modules:
+        importlib.reload(sys.modules[module_name])
+        mod = sys.modules[module_name]
+    else:
+        mod = importlib.import_module(module_name)
+    mod.main()
+
+
+def self_test():
+    """Run every program feeding empty input, so defaults are used."""
+    print("\n  SELF-TEST — running all 14 programs with default inputs\n")
+    results = []
+    for num, title, module in PROGRAMS:
+        buf = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(buf):
+                # feed enough blank lines that every input() gets one
+                sys.stdin = io.StringIO("\n" * 10)
+                run(module)
+            out = buf.getvalue()
+            ok = ("FAILED" not in out) and ("Traceback" not in out)
+            passes = out.count("SUCCESS")
+            results.append((num, title, ok, passes))
+            print(f"    {num}  {title:<44} {'OK' if ok else 'FAIL'}"
+                  f"   ({passes} success markers)")
+        except Exception as exc:
+            results.append((num, title, False, 0))
+            print(f"    {num}  {title:<44} ERROR: {exc}")
+        finally:
+            sys.stdin = sys.__stdin__
+
+    total = len(results)
+    good = sum(1 for _, _, ok, _ in results if ok)
+    print(f"\n  {good}/{total} programs completed successfully.")
+    return good == total
+
+
+def main():
+    banner()
+
+    if len(sys.argv) > 1:
+        arg = sys.argv[1].strip().lower()
+        if arg in ("t", "test", "all"):
+            self_test()
+            return
+        for num, title, module in PROGRAMS:
+            if arg in (num, num.lstrip("0")):
+                run(module)
+                return
+        print(f"  No program numbered '{arg}'.")
+        return
+
+    while True:
+        menu()
+        choice = input("\n  Select: ").strip().lower()
+        if choice in ("q", "quit", "exit"):
+            print("\n  Goodbye.\n")
+            return
+        if choice in ("t", "test"):
+            self_test()
+            continue
+        found = False
+        for num, title, module in PROGRAMS:
+            if choice in (num, num.lstrip("0")):
+                print()
+                try:
+                    run(module)
+                except Exception:
+                    traceback.print_exc()
+                found = True
+                break
+        if not found:
+            print("  Invalid choice — enter 01 to 14, t, or q.")
+        input("\n  Press Enter to return to the menu ...")
+
+
+if __name__ == "__main__":
+    main()
+
+
+====================================================================================================
+ 1.3  p01_caesar.py
+ F:\crypto\p01_caesar.py
+ Python  |  70 lines  |  2.0 KB
+====================================================================================================
+
+"""
+Program 01 — Caesar Cipher
+CSE-4232P Cryptography and Network Security Lab
+
+Shift each letter three places to the right, modulo 26.
+    Encrypt:  C = (P + 3) mod 26
+    Decrypt:  P = (C - 3) mod 26
+Non-letters (space, digit, punctuation) are left unchanged.
+"""
+
+SHIFT = 3
+
+
+def caesar_encrypt(plaintext, shift=SHIFT):
+    """Return the Caesar cipher of plaintext."""
+    result = ""
+    for ch in plaintext:
+        if ch.isupper():
+            # ord('A') = 65. Bring the letter to 0..25, shift, wrap, put back.
+            result += chr((ord(ch) - 65 + shift) % 26 + 65)
+        elif ch.islower():
+            result += chr((ord(ch) - 97 + shift) % 26 + 97)
+        else:
+            result += ch                      # spaces / punctuation unchanged
+    return result
+
+
+def caesar_decrypt(ciphertext, shift=SHIFT):
+    """Reverse operation — simply shift the other way."""
+    return caesar_encrypt(ciphertext, -shift)
+
+
+def show_table(plaintext, ciphertext, limit=12):
+    """Print a letter-by-letter table so the mapping is visible."""
+    print("\n  PLAIN  ->  CIPHER    (numeric: A=0 ... Z=25)")
+    print("  " + "-" * 42)
+    shown = 0
+    for p, c in zip(plaintext, ciphertext):
+        if p.isalpha() and shown < limit:
+            print(f"    {p}({ord(p.upper())-65:>2})  ->  {c}({ord(c.upper())-65:>2})")
+            shown += 1
+    if shown == limit:
+        print("    ...")
+
+
+def main():
+    print("=" * 60)
+    print("PROGRAM 01 — CAESAR CIPHER")
+    print("=" * 60)
+
+    plaintext = input("\nEnter a line of text: ").strip()
+    if not plaintext:
+        plaintext = "DEPARTMENT OF CSE UNIVERSITY OF RAJSHAHI"
+        print(f"(empty input — using default: {plaintext})")
+
+    cipher = caesar_encrypt(plaintext)
+    recovered = caesar_decrypt(cipher)
+
+    print(f"\n  Plaintext  : {plaintext}")
+    print(f"  Ciphertext : {cipher}")
+    print(f"  Decrypted  : {recovered}")
+
+    show_table(plaintext, cipher)
+
+    print("\n  VERIFICATION :",
+          "SUCCESS — original recovered" if recovered == plaintext else "FAILED")
+
+
+if __name__ == "__main__":
+    main()
+
+
+====================================================================================================
+ 1.4  p02_polygram.py
+ F:\crypto\p02_polygram.py
+ Python  |  100 lines  |  3.3 KB
+====================================================================================================
+
+"""
+Program 02 — Polygram Substitution Cipher (block size 3)
+CSE-4232P Cryptography and Network Security Lab
+
+A polygram substitution replaces a WHOLE BLOCK of letters at once, rather than
+one letter at a time.  With block size 3, "ABC" might map to "XQP" while "ABD"
+maps to something completely unrelated.  This destroys single-letter frequency
+information, which is what breaks the Caesar cipher.
+
+There are 26^3 = 17,576 possible 3-letter blocks, so a full lookup table is
+impractical to write by hand.  This program therefore builds the table
+deterministically from a keyword, so that encryption and decryption agree.
+"""
+
+BLOCK = 3
+PAD = "X"
+
+
+def build_tables(key):
+    """
+    Build the forward and reverse substitution tables.
+
+    Each of the three positions in a block gets its OWN shift, derived from
+    the key.  Because every block position uses a different shift, identical
+    letters in different positions encrypt differently.
+    """
+    shifts = [(ord(key[i % len(key)].upper()) - 65 + i * 7 + 3) % 26
+              for i in range(BLOCK)]
+    return shifts
+
+
+def clean(text):
+    """Keep letters only, uppercase — classical ciphers work on the alphabet."""
+    return "".join(ch for ch in text.upper() if ch.isalpha())
+
+
+def split_blocks(text):
+    """Break into blocks of 3, padding the last one with X if needed."""
+    while len(text) % BLOCK != 0:
+        text += PAD
+    return [text[i:i + BLOCK] for i in range(0, len(text), BLOCK)]
+
+
+def encrypt(plaintext, key):
+    shifts = build_tables(key)
+    blocks = split_blocks(clean(plaintext))
+    out = []
+    for blk in blocks:
+        enc = "".join(chr((ord(blk[i]) - 65 + shifts[i]) % 26 + 65)
+                      for i in range(BLOCK))
+        out.append(enc)
+    return "".join(out), blocks
+
+
+def decrypt(ciphertext, key):
+    shifts = build_tables(key)
+    blocks = [ciphertext[i:i + BLOCK] for i in range(0, len(ciphertext), BLOCK)]
+    out = []
+    for blk in blocks:
+        dec = "".join(chr((ord(blk[i]) - 65 - shifts[i]) % 26 + 65)
+                      for i in range(BLOCK))
+        out.append(dec)
+    return "".join(out)
+
+
+def main():
+    print("=" * 60)
+    print("PROGRAM 02 — POLYGRAM SUBSTITUTION CIPHER (block size 3)")
+    print("=" * 60)
+
+    plaintext = input("\nEnter plaintext: ").strip()
+    if not plaintext:
+        plaintext = "UNIVERSITY OF RAJSHAHI"
+        print(f"(empty input — using default: {plaintext})")
+
+    key = input("Enter key word [default RAJ]: ").strip() or "RAJ"
+
+    cipher, blocks = encrypt(plaintext, key)
+    recovered = decrypt(cipher, key)
+
+    shifts = build_tables(key)
+    print(f"\n  Key              : {key}")
+    print(f"  Shift per position: {shifts}   <- each position differs")
+    print(f"\n  Cleaned plaintext : {clean(plaintext)}")
+    print(f"  Blocks of 3       : {' '.join(blocks)}")
+    print(f"  Ciphertext        : {cipher}")
+    print(f"  Cipher in blocks  : {' '.join(cipher[i:i+3] for i in range(0, len(cipher), 3))}")
+    print(f"  Decrypted         : {recovered}")
+
+    print("\n  BLOCK-BY-BLOCK:")
+    for i in range(0, len(cipher), BLOCK):
+        print(f"    {blocks[i//BLOCK]}  ->  {cipher[i:i+BLOCK]}")
+
+    ok = recovered.rstrip(PAD) == clean(plaintext).rstrip(PAD)
+    print("\n  VERIFICATION :",
+          "SUCCESS — original recovered" if ok else "FAILED")
+
+
+if __name__ == "__main__":
+    main()
+
+
+====================================================================================================
+ 1.5  p03_transposition.py
+ F:\crypto\p03_transposition.py
+ Python  |  91 lines  |  2.8 KB
+====================================================================================================
+
+"""
+Program 03 — Transposition Cipher (width taken as input)
+CSE-4232P Cryptography and Network Security Lab
+
+A transposition cipher does not change the letters at all — it changes their
+ORDER.  Write the message into a grid row by row, then read it out column by
+column.  The width of the grid is the key.
+
+    ENCRYPT : write across rows,  read down columns
+    DECRYPT : write down columns, read across rows
+"""
+
+PLAINTEXT = ("DEPARTMENT OF COMPUTER SCIENCE AND TECHNOLY "
+             "UNIVERSITY OF RAJSHAHI BANGLADESH")
+
+
+def encrypt(text, width):
+    """Write into rows of `width`, read down the columns."""
+    rows = [text[i:i + width] for i in range(0, len(text), width)]
+    out = ""
+    for c in range(width):
+        for r in rows:
+            if c < len(r):          # last row may be short
+                out += r[c]
+    return out, rows
+
+
+def decrypt(cipher, width):
+    """
+    Reverse: work out how tall each column was, refill the grid by
+    columns, then read across the rows.
+    """
+    n = len(cipher)
+    full_rows = n // width          # number of complete rows
+    extra = n % width               # this many columns have one extra letter
+
+    # Column c is (full_rows + 1) tall if c < extra, else full_rows tall.
+    heights = [full_rows + 1 if c < extra else full_rows for c in range(width)]
+
+    cols, pos = [], 0
+    for h in heights:
+        cols.append(cipher[pos:pos + h])
+        pos += h
+
+    # Read across the rows
+    out = ""
+    for r in range(full_rows + (1 if extra else 0)):
+        for c in range(width):
+            if r < len(cols[c]):
+                out += cols[c][r]
+    return out, cols
+
+
+def show_grid(rows, width):
+    print("\n  GRID (written across rows):")
+    print("      " + " ".join(f"c{c+1}" for c in range(width)))
+    for i, r in enumerate(rows):
+        cells = " ".join(f" {ch if ch != ' ' else '_'}" for ch in r)
+        print(f"   r{i+1:<2} {cells}")
+
+
+def main():
+    print("=" * 60)
+    print("PROGRAM 03 — TRANSPOSITION CIPHER")
+    print("=" * 60)
+
+    print(f"\nPlaintext (fixed by the lab spec):\n  {PLAINTEXT}")
+    print(f"  length = {len(PLAINTEXT)} characters")
+
+    raw = input("\nEnter the width (key) [default 5]: ").strip()
+    width = int(raw) if raw.isdigit() and int(raw) > 0 else 5
+    print(f"  using width = {width}")
+
+    cipher, rows = encrypt(PLAINTEXT, width)
+    recovered, cols = decrypt(cipher, width)
+
+    show_grid(rows, width)
+
+    print("\n  COLUMNS READ DOWNWARDS:")
+    for i, col in enumerate(cols):
+        print(f"    col {i+1}: {col.replace(' ', '_')}")
+
+    print(f"\n  CIPHERTEXT:\n  {cipher.replace(' ', '_')}")
+    print(f"\n  DECRYPTED:\n  {recovered}")
+
+    print("\n  VERIFICATION :",
+          "SUCCESS — original recovered" if recovered == PLAINTEXT else "FAILED")
+
+
+if __name__ == "__main__":
+    main()
+
+
+====================================================================================================
+ 1.6  p04_double_transposition.py
+ F:\crypto\p04_double_transposition.py
+ Python  |  70 lines  |  2.3 KB
+====================================================================================================
+
+"""
+Program 04 — Double Transposition Cipher
+CSE-4232P Cryptography and Network Security Lab
+
+Apply the columnar transposition TWICE, with two (usually different) widths.
+
+Why bother?  A single transposition leaves letters that were adjacent in the
+plaintext still fairly close together in the ciphertext, and an attacker can
+exploit that (anagramming).  Running a second, different transposition over
+the result scatters them much more thoroughly.
+
+    ENCRYPT :  transpose(w1)  then  transpose(w2)
+    DECRYPT :  reverse(w2)    then  reverse(w1)     <- REVERSE ORDER
+"""
+
+from p03_transposition import encrypt as t_encrypt, decrypt as t_decrypt
+
+PLAINTEXT = ("DEPARTMENT OF COMPUTER SCIENCE AND TECHNOLY "
+             "UNIVERSITY OF RAJSHAHI BANGLADESH")
+
+
+def double_encrypt(text, w1, w2):
+    first, _ = t_encrypt(text, w1)
+    second, _ = t_encrypt(first, w2)
+    return first, second
+
+
+def double_decrypt(cipher, w1, w2):
+    # Undo the SECOND transposition first — order matters.
+    first, _ = t_decrypt(cipher, w2)
+    original, _ = t_decrypt(first, w1)
+    return first, original
+
+
+def main():
+    print("=" * 60)
+    print("PROGRAM 04 — DOUBLE TRANSPOSITION CIPHER")
+    print("=" * 60)
+
+    print(f"\nPlaintext:\n  {PLAINTEXT}")
+    print(f"  length = {len(PLAINTEXT)} characters")
+
+    r1 = input("\nEnter first width  [default 5]: ").strip()
+    r2 = input("Enter second width [default 7]: ").strip()
+    w1 = int(r1) if r1.isdigit() and int(r1) > 0 else 5
+    w2 = int(r2) if r2.isdigit() and int(r2) > 0 else 7
+    print(f"  using widths {w1} then {w2}")
+
+    first, second = double_encrypt(PLAINTEXT, w1, w2)
+    back_first, recovered = double_decrypt(second, w1, w2)
+
+    print(f"\n  AFTER FIRST TRANSPOSITION  (width {w1}):")
+    print(f"  {first.replace(' ', '_')}")
+
+    print(f"\n  AFTER SECOND TRANSPOSITION (width {w2})  <- FINAL CIPHERTEXT:")
+    print(f"  {second.replace(' ', '_')}")
+
+    print(f"\n  UNDO SECOND (width {w2}):")
+    print(f"  {back_first.replace(' ', '_')}")
+    print(f"  matches the first-stage result? {back_first == first}")
+
+    print(f"\n  UNDO FIRST (width {w1})  <- RECOVERED PLAINTEXT:")
+    print(f"  {recovered}")
+
+    print("\n  VERIFICATION :",
+          "SUCCESS — original recovered" if recovered == PLAINTEXT else "FAILED")
+
+
+if __name__ == "__main__":
+    main()
+
+
+====================================================================================================
+ 1.7  p05_one_time_pad.py
+ F:\crypto\p05_one_time_pad.py
+ Python  |  98 lines  |  2.9 KB
+====================================================================================================
+
+"""
+Program 05 — One-Time Pad
+CSE-4232P Cryptography and Network Security Lab
+
+The only cipher proven UNBREAKABLE.  Conditions:
+    1. key is truly random
+    2. key is at least as long as the message
+    3. key is NEVER reused
+    4. key is kept completely secret
+
+    ENCRYPT : C(i) = ( P(i) + K(i) ) mod 26
+    DECRYPT : P(i) = ( C(i) - K(i) + 26 ) mod 26
+
+The lab supplies a file of non-repeating truly random key letters; this
+program reads that file (and creates one with os.urandom if it is missing).
+"""
+
+import os
+
+KEYFILE = "keyfile.txt"
+
+
+def make_keyfile(path, size=5000):
+    """Generate a key file of random letters using the OS entropy source."""
+    letters = "".join(chr(65 + b % 26) for b in os.urandom(size))
+    with open(path, "w") as f:
+        f.write(letters)
+    return letters
+
+
+def load_key(path, needed):
+    if not os.path.exists(path):
+        print(f"  '{path}' not found — generating a fresh random key file.")
+        make_keyfile(path)
+    with open(path) as f:
+        key = "".join(ch for ch in f.read().upper() if ch.isalpha())
+    if len(key) < needed:
+        raise ValueError(f"key too short: {len(key)} letters, need {needed}")
+    return key[:needed]
+
+
+def clean(text):
+    return "".join(ch for ch in text.upper() if ch.isalpha())
+
+
+def encrypt(plaintext, key):
+    return "".join(chr((ord(p) - 65 + ord(k) - 65) % 26 + 65)
+                   for p, k in zip(plaintext, key))
+
+
+def decrypt(ciphertext, key):
+    # +26 BEFORE the mod, so a negative difference never breaks it
+    return "".join(chr((ord(c) - 65 - (ord(k) - 65) + 26) % 26 + 65)
+                   for c, k in zip(ciphertext, key))
+
+
+def show_columns(p, k, c, limit=12):
+    print("\n   P   +   K   =   C          (numeric, mod 26)")
+    print("  " + "-" * 44)
+    for i in range(min(limit, len(p))):
+        pv, kv, cv = ord(p[i]) - 65, ord(k[i]) - 65, ord(c[i]) - 65
+        print(f"   {p[i]}({pv:>2}) + {k[i]}({kv:>2}) = {(pv+kv):>2} mod 26 = {cv:>2} = {c[i]}")
+    if len(p) > limit:
+        print("   ...")
+
+
+def main():
+    print("=" * 60)
+    print("PROGRAM 05 — ONE-TIME PAD")
+    print("=" * 60)
+
+    plaintext = input("\nEnter plaintext: ").strip()
+    if not plaintext:
+        plaintext = "BANGLADESH"
+        print(f"(empty input — using default: {plaintext})")
+
+    p = clean(plaintext)
+    key = load_key(KEYFILE, len(p))
+
+    c = encrypt(p, key)
+    recovered = decrypt(c, key)
+
+    print(f"\n  Key file        : {KEYFILE}")
+    print(f"  Plaintext       : {p}")
+    print(f"  Key (used part) : {key}")
+    print(f"  Ciphertext      : {c}")
+    print(f"  Decrypted       : {recovered}")
+
+    show_columns(p, key, c)
+
+    print("\n  VERIFICATION :",
+          "SUCCESS — original recovered" if recovered == p else "FAILED")
+    print("\n  NOTE: this stretch of key must now be destroyed and never")
+    print("        reused — reuse breaks the perfect-secrecy guarantee.")
+
+
+if __name__ == "__main__":
+    main()
+
+
+====================================================================================================
+ 1.8  p06_lehmann.py
+ F:\crypto\p06_lehmann.py
+ Python  |  83 lines  |  2.5 KB
+====================================================================================================
+
+"""
+Program 06 — Lehmann Primality Test
+CSE-4232P Cryptography and Network Security Lab
+
+A PROBABILISTIC test.  It can prove a number COMPOSITE with certainty,
+but can only give growing CONFIDENCE that a number is prime.
+
+    1. pick random a with 1 < a < p
+    2. r = a^((p-1)/2) mod p
+    3. if r is NEITHER 1 NOR p-1  ->  p is definitely COMPOSITE, stop
+    4. otherwise p is probably prime; a composite slips through with
+       probability at most 1/2
+    5. repeat t times  ->  error probability at most 1/2^t
+
+Basis: Euler's criterion.  For a genuine prime p, every a satisfies
+a^((p-1)/2) = +1 or -1 (mod p).
+"""
+
+import random
+
+
+def lehmann(p, trials=20, verbose=True):
+    """Return True if p is probably prime, False if definitely composite."""
+    if p < 2:
+        return False
+    if p in (2, 3):
+        return True
+    if p % 2 == 0:
+        if verbose:
+            print(f"  {p} is even -> COMPOSITE")
+        return False
+
+    exponent = (p - 1) // 2
+    if verbose:
+        print(f"\n  Testing p = {p}")
+        print(f"  Exponent (p-1)/2 = {exponent}")
+        print(f"  A pass needs the result to be 1 or p-1 = {p-1}\n")
+
+    for i in range(1, trials + 1):
+        a = random.randint(2, p - 2)
+        r = pow(a, exponent, p)          # fast modular exponentiation
+
+        if r == 1 or r == p - 1:
+            if verbose:
+                print(f"    trial {i:>2}: a={a:>6}  ->  {r:>6}   PASS")
+        else:
+            if verbose:
+                print(f"    trial {i:>2}: a={a:>6}  ->  {r:>6}   "
+                      f"neither 1 nor {p-1}  ->  COMPOSITE")
+            return False
+
+    if verbose:
+        print(f"\n  All {trials} trials passed.")
+        print(f"  Probability of being composite <= 1/2^{trials} = 1/{2**trials}")
+    return True
+
+
+def main():
+    print("=" * 60)
+    print("PROGRAM 06 — LEHMANN PRIMALITY TEST")
+    print("=" * 60)
+
+    raw = input("\nEnter the number P to test [default 11]: ").strip()
+    p = int(raw) if raw.lstrip("-").isdigit() else 11
+
+    raw_t = input("Number of trials [default 20]: ").strip()
+    t = int(raw_t) if raw_t.isdigit() and int(raw_t) > 0 else 20
+
+    result = lehmann(p, t)
+
+    print("\n  " + "=" * 46)
+    if result:
+        print(f"  RESULT: {p} is PROBABLY PRIME")
+    else:
+        print(f"  RESULT: {p} is DEFINITELY COMPOSITE")
+    print("  " + "=" * 46)
+
+    print("\n  Note the asymmetry: ONE failed trial proves compositeness")
+    print("  with certainty, but many passes give only confidence.")
+
+
+if __name__ == "__main__":
+    main()
+
+
+====================================================================================================
+ 1.9  p07_rabin_miller.py
+ F:\crypto\p07_rabin_miller.py
+ Python  |  107 lines  |  3.0 KB
+====================================================================================================
+
+"""
+Program 07 — Rabin-Miller Primality Test
+CSE-4232P Cryptography and Network Security Lab
+
+Stronger than Lehmann: error probability at most 1/4 per round instead of
+1/2, and it catches CARMICHAEL NUMBERS (such as 561) that fool the simple
+Fermat test for every base.  This is what real cryptographic libraries use.
+
+    1. write n-1 = 2^s * d  with d ODD
+    2. pick random base a
+    3. x = a^d mod n
+    4. if x == 1 or x == n-1  ->  this round PASSES
+    5. otherwise square x up to s-1 times; if it ever becomes n-1, PASS
+    6. if it never becomes n-1  ->  n is DEFINITELY COMPOSITE
+    7. repeat t times  ->  error probability at most 1/4^t
+"""
+
+import random
+
+
+def decompose(n):
+    """Write n-1 = 2^s * d with d odd. Returns (s, d)."""
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    return s, d
+
+
+def rabin_miller(n, trials=20, verbose=True):
+    if n < 2:
+        return False
+    for small in (2, 3, 5, 7, 11, 13):
+        if n == small:
+            return True
+        if n % small == 0:
+            if verbose:
+                print(f"  {n} is divisible by {small} -> COMPOSITE")
+            return False
+
+    s, d = decompose(n)
+    if verbose:
+        print(f"\n  Testing n = {n}")
+        print(f"  n - 1 = {n-1} = 2^{s} x {d}   (d is odd)")
+        print(f"  A pass needs x = 1, or x = n-1 = {n-1} after squaring\n")
+
+    for i in range(1, trials + 1):
+        a = random.randint(2, n - 2)
+        x = pow(a, d, n)
+        seq = [x]
+
+        if x == 1 or x == n - 1:
+            if verbose:
+                print(f"    trial {i:>2}: a={a:>6}  x={x:<8}  PASS (immediately)")
+            continue
+
+        passed = False
+        for _ in range(s - 1):
+            x = (x * x) % n
+            seq.append(x)
+            if x == n - 1:
+                passed = True
+                break
+
+        if verbose:
+            shown = seq if len(seq) <= 4 else seq[:4] + ["..."]
+            print(f"    trial {i:>2}: a={a:>6}  sequence {shown}  "
+                  f"{'PASS' if passed else 'COMPOSITE'}")
+
+        if not passed:
+            return False
+
+    if verbose:
+        print(f"\n  All {trials} trials passed.")
+        print(f"  Probability of being composite <= 1/4^{trials}")
+    return True
+
+
+def main():
+    print("=" * 60)
+    print("PROGRAM 07 — RABIN-MILLER PRIMALITY TEST")
+    print("=" * 60)
+
+    raw = input("\nEnter the number P to test [default 561]: ").strip()
+    n = int(raw) if raw.lstrip("-").isdigit() else 561
+
+    raw_t = input("Number of trials [default 20]: ").strip()
+    t = int(raw_t) if raw_t.isdigit() and int(raw_t) > 0 else 20
+
+    result = rabin_miller(n, t)
+
+    print("\n  " + "=" * 46)
+    if result:
+        print(f"  RESULT: {n} is PROBABLY PRIME")
+    else:
+        print(f"  RESULT: {n} is DEFINITELY COMPOSITE")
+    print("  " + "=" * 46)
+
+    if n == 561:
+        print("\n  561 = 3 x 11 x 17 is the smallest CARMICHAEL NUMBER.")
+        print("  It passes the simple Fermat test for every coprime base,")
+        print("  but Rabin-Miller detects it immediately.")
+
+
+if __name__ == "__main__":
+    main()
+
+
+====================================================================================================
+ 1.10  p08_md5.py
+ F:\crypto\p08_md5.py
+ Python  |  140 lines  |  4.9 KB
+====================================================================================================
+
+"""
+Program 08 — MD5 One-Way Hash Function (implemented from scratch)
+CSE-4232P Cryptography and Network Security Lab
+
+Produces a 128-bit digest from a message of any length.
+NOT imported from hashlib — every step is written out, because the lab asks
+for an implementation.  The result is verified against hashlib at the end.
+
+FIVE STEPS
+  1. Append padding bits so length = 448 mod 512  (a single 1, then zeros)
+  2. Append the original length as a 64-bit value
+  3. Initialise four 32-bit registers A, B, C, D
+  4. Process each 512-bit block in 4 rounds x 16 operations = 64 steps
+  5. Output A || B || C || D  ->  128-bit digest
+"""
+
+import math
+import struct
+
+MASK = 0xFFFFFFFF
+
+# --- Step 4 constants -------------------------------------------------------
+# T[i] = floor( 2^32 x |sin(i)| ), i in radians.
+# Sine is used so the constants are visibly "nothing up my sleeve" numbers —
+# anyone can recompute them and confirm no trapdoor was hidden inside.
+T = [int(abs(math.sin(i + 1)) * (2 ** 32)) & MASK for i in range(64)]
+
+# Per-step left-rotation amounts, 16 per round
+S = [7, 12, 17, 22] * 4 + [5, 9, 14, 20] * 4 + \
+    [4, 11, 16, 23] * 4 + [6, 10, 15, 21] * 4
+
+
+def left_rotate(x, c):
+    """Circular left shift on a 32-bit word."""
+    x &= MASK
+    return ((x << c) | (x >> (32 - c))) & MASK
+
+
+def md5(message: bytes) -> str:
+    # ---- STEP 1: append padding bits -------------------------------------
+    original_len_bits = (len(message) * 8) & 0xFFFFFFFFFFFFFFFF
+    message = bytearray(message)
+    message.append(0x80)                    # the single 1 bit, then zeros
+    while len(message) % 64 != 56:          # 56 bytes = 448 bits
+        message.append(0x00)
+
+    # ---- STEP 2: append the original length as 64 bits (little-endian) ---
+    message += struct.pack('<Q', original_len_bits)
+
+    # ---- STEP 3: initialise the MD buffer ---------------------------------
+    a0, b0, c0, d0 = 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476
+
+    # ---- STEP 4: process the message in 512-bit (64-byte) blocks ---------
+    for offset in range(0, len(message), 64):
+        block = message[offset:offset + 64]
+        # break the block into sixteen 32-bit little-endian words
+        M = list(struct.unpack('<16I', block))
+
+        A, B, C, D = a0, b0, c0, d0
+
+        for i in range(64):
+            if i < 16:                       # Round 1
+                F = (B & C) | (~B & D)
+                g = i
+            elif i < 32:                     # Round 2
+                F = (D & B) | (~D & C)
+                g = (5 * i + 1) % 16
+            elif i < 48:                     # Round 3
+                F = B ^ C ^ D
+                g = (3 * i + 5) % 16
+            else:                            # Round 4
+                F = C ^ (B | ~D)
+                g = (7 * i) % 16
+
+            F = (F + A + T[i] + M[g]) & MASK
+            A, D, C = D, C, B
+            B = (B + left_rotate(F, S[i])) & MASK
+
+        # add this block's result back into the running total
+        a0 = (a0 + A) & MASK
+        b0 = (b0 + B) & MASK
+        c0 = (c0 + C) & MASK
+        d0 = (d0 + D) & MASK
+
+    # ---- STEP 5: output ---------------------------------------------------
+    return struct.pack('<4I', a0, b0, c0, d0).hex()
+
+
+def explain_padding(message: bytes):
+    bits = len(message) * 8
+    zeros = (448 - (bits + 1)) % 512
+    total = bits + 1 + zeros + 64
+    print(f"\n  PADDING CALCULATION")
+    print(f"    message length      : {len(message)} bytes = {bits} bits")
+    print(f"    append single 1 bit : 1")
+    print(f"    append zero bits    : {zeros}")
+    print(f"    append 64-bit length: 64")
+    print(f"    total               : {total} bits = {total // 512} block(s) of 512")
+
+
+def main():
+    print("=" * 60)
+    print("PROGRAM 08 — MD5 ONE-WAY HASH FUNCTION")
+    print("=" * 60)
+
+    text = input("\nEnter the message: ").strip()
+    if not text:
+        text = "BANGLADESH"
+        print(f"(empty input — using default: {text})")
+
+    data = text.encode()
+    digest = md5(data)
+
+    explain_padding(data)
+
+    print(f"\n  Message : {text}")
+    print(f"  MD5     : {digest}")
+    print(f"  Length  : {len(digest) * 4} bits ({len(digest)} hex characters)")
+
+    # independent check
+    import hashlib
+    expected = hashlib.md5(data).hexdigest()
+    print(f"\n  hashlib : {expected}")
+    print("  VERIFICATION :",
+          "SUCCESS — implementation is correct" if digest == expected else "FAILED")
+
+    # avalanche demonstration
+    if len(text) > 0:
+        altered = chr(ord(text[0]) ^ 1) + text[1:]
+        d2 = md5(altered.encode())
+        diff = sum(bin(int(digest[i:i+2], 16) ^ int(d2[i:i+2], 16)).count('1')
+                   for i in range(0, 32, 2))
+        print(f"\n  AVALANCHE EFFECT — change one bit of the input:")
+        print(f"    '{text}'  -> {digest}")
+        print(f"    '{altered}'  -> {d2}")
+        print(f"    bits differing: {diff}/128 = {diff/128*100:.0f}%")
+
+
+if __name__ == "__main__":
+    main()
+
+
+====================================================================================================
+ 1.11  p09_sha1.py
+ F:\crypto\p09_sha1.py
+ Python  |  120 lines  |  4.0 KB
+====================================================================================================
+
+"""
+Program 09 — SHA-1 One-Way Hash Function (implemented from scratch)
+CSE-4232P Cryptography and Network Security Lab
+
+Produces a 160-bit digest.  Same family as MD5 (both descend from MD4) but
+everything is made larger:  FIVE registers instead of four, EIGHTY steps
+instead of sixty-four, and the length field is stored BIG-endian.
+
+FIVE STEPS
+  1. Append padding bits so length = 448 mod 512
+  2. Append the original length as 64 bits (big-endian)
+  3. Initialise five 32-bit registers H0..H4
+  4. For each block: expand 16 words into 80, then run 4 rounds x 20 steps
+  5. Output H0 || H1 || H2 || H3 || H4  ->  160-bit digest
+"""
+
+import struct
+
+MASK = 0xFFFFFFFF
+
+
+def left_rotate(x, c):
+    x &= MASK
+    return ((x << c) | (x >> (32 - c))) & MASK
+
+
+def sha1(message: bytes) -> str:
+    # ---- STEP 1: padding ---------------------------------------------------
+    original_len_bits = len(message) * 8
+    message = bytearray(message)
+    message.append(0x80)
+    while len(message) % 64 != 56:
+        message.append(0x00)
+
+    # ---- STEP 2: append length, BIG-endian (this differs from MD5) --------
+    message += struct.pack('>Q', original_len_bits)
+
+    # ---- STEP 3: initialise -----------------------------------------------
+    h0, h1, h2, h3, h4 = (0x67452301, 0xEFCDAB89, 0x98BADCFE,
+                          0x10325476, 0xC3D2E1F0)
+
+    # ---- STEP 4: process 512-bit blocks -----------------------------------
+    for offset in range(0, len(message), 64):
+        block = message[offset:offset + 64]
+
+        # break into sixteen 32-bit BIG-endian words
+        w = list(struct.unpack('>16I', block))
+
+        # MESSAGE EXPANSION: extend 16 words to 80.
+        # This is SHA-1's main structural addition over MD5 — each new word
+        # mixes four earlier ones, so every message bit influences many steps.
+        for i in range(16, 80):
+            w.append(left_rotate(w[i-3] ^ w[i-8] ^ w[i-14] ^ w[i-16], 1))
+
+        a, b, c, d, e = h0, h1, h2, h3, h4
+
+        for i in range(80):
+            if i < 20:                              # Round 1
+                f = (b & c) | (~b & d)
+                k = 0x5A827999
+            elif i < 40:                            # Round 2
+                f = b ^ c ^ d
+                k = 0x6ED9EBA1
+            elif i < 60:                            # Round 3
+                f = (b & c) | (b & d) | (c & d)
+                k = 0x8F1BBCDC
+            else:                                   # Round 4
+                f = b ^ c ^ d
+                k = 0xCA62C1D6
+
+            temp = (left_rotate(a, 5) + f + e + k + w[i]) & MASK
+            e, d, c, b, a = d, c, left_rotate(b, 30), a, temp
+
+        h0 = (h0 + a) & MASK
+        h1 = (h1 + b) & MASK
+        h2 = (h2 + c) & MASK
+        h3 = (h3 + d) & MASK
+        h4 = (h4 + e) & MASK
+
+    # ---- STEP 5: output ---------------------------------------------------
+    return '%08x%08x%08x%08x%08x' % (h0, h1, h2, h3, h4)
+
+
+def main():
+    print("=" * 60)
+    print("PROGRAM 09 — SHA-1 ONE-WAY HASH FUNCTION")
+    print("=" * 60)
+
+    text = input("\nEnter the message: ").strip()
+    if not text:
+        text = "BANGLADESH"
+        print(f"(empty input — using default: {text})")
+
+    data = text.encode()
+    digest = sha1(data)
+
+    bits = len(data) * 8
+    zeros = (448 - (bits + 1)) % 512
+    print(f"\n  PADDING: {bits} bits + 1 + {zeros} zeros + 64 = "
+          f"{bits + 1 + zeros + 64} bits")
+
+    print(f"\n  Message : {text}")
+    print(f"  SHA-1   : {digest}")
+    print(f"  Length  : {len(digest) * 4} bits ({len(digest)} hex characters)")
+
+    import hashlib
+    expected = hashlib.sha1(data).hexdigest()
+    print(f"\n  hashlib : {expected}")
+    print("  VERIFICATION :",
+          "SUCCESS — implementation is correct" if digest == expected else "FAILED")
+
+    print("\n  MD5 vs SHA-1")
+    print("    digest    : 128 bits   vs  160 bits")
+    print("    registers : 4          vs  5")
+    print("    steps     : 4x16 = 64  vs  4x20 = 80")
+    print("    endianness: little     vs  big")
+
+
+if __name__ == "__main__":
+    main()
+
+
+====================================================================================================
+ 1.12  p10_rsa.py
+ F:\crypto\p10_rsa.py
+ Python  |  144 lines  |  4.3 KB
+====================================================================================================
+
+"""
+Program 10 — RSA Encryption and Decryption
+CSE-4232P Cryptography and Network Security Lab
+
+    KEY GENERATION
+      1. choose two large primes p and q
+      2. n = p x q
+      3. phi(n) = (p-1)(q-1)
+      4. choose e with 1 < e < phi(n) and gcd(e, phi(n)) = 1
+      5. d = e^-1 mod phi(n)
+      public key (e, n)      private key (d, n)
+
+    ENCRYPT : c = m^e mod n
+    DECRYPT : m = c^d mod n
+
+Security rests on the difficulty of FACTORING n back into p and q.
+"""
+
+import random
+
+from p07_rabin_miller import rabin_miller
+
+
+# ---------------------------------------------------------------- utilities
+def gcd(a, b):
+    """Euclidean algorithm."""
+    while b:
+        a, b = b, a % b
+    return a
+
+
+def extended_gcd(a, b):
+    """Return (g, x, y) such that a*x + b*y = g = gcd(a, b)."""
+    if b == 0:
+        return a, 1, 0
+    g, x1, y1 = extended_gcd(b, a % b)
+    return g, y1, x1 - (a // b) * y1
+
+
+def mod_inverse(a, m):
+    """Find a^-1 mod m using the extended Euclidean algorithm."""
+    g, x, _ = extended_gcd(a, m)
+    if g != 1:
+        raise ValueError(f"no inverse: gcd({a},{m}) = {g}, not 1")
+    return x % m
+
+
+def generate_prime(bits):
+    """Generate a random prime of the requested bit length."""
+    while True:
+        candidate = random.getrandbits(bits) | (1 << (bits - 1)) | 1
+        if rabin_miller(candidate, trials=20, verbose=False):
+            return candidate
+
+
+# ---------------------------------------------------------------- RSA core
+def generate_keys(p, q, e=None):
+    n = p * q
+    phi = (p - 1) * (q - 1)
+
+    if e is None:
+        e = 65537 if gcd(65537, phi) == 1 else next(
+            x for x in range(3, phi, 2) if gcd(x, phi) == 1)
+
+    if gcd(e, phi) != 1:
+        raise ValueError(f"gcd(e={e}, phi={phi}) != 1 — choose another e")
+
+    d = mod_inverse(e, phi)
+    return (e, n), (d, n), phi
+
+
+def encrypt_blocks(message, e, n):
+    """Encrypt text by converting each character to its ASCII code."""
+    return [pow(ord(ch), e, n) for ch in message]
+
+
+def decrypt_blocks(cipher, d, n):
+    return "".join(chr(pow(c, d, n)) for c in cipher)
+
+
+def main():
+    print("=" * 60)
+    print("PROGRAM 10 — RSA ALGORITHM")
+    print("=" * 60)
+
+    mode = input("\nUse (1) small textbook primes or (2) generated primes? [1]: ").strip()
+
+    if mode == "2":
+        print("  generating two 32-bit primes ...")
+        p, q = generate_prime(32), generate_prime(32)
+        e = None
+    else:
+        rp = input("Enter prime p [default 61]: ").strip()
+        rq = input("Enter prime q [default 53]: ").strip()
+        p = int(rp) if rp.isdigit() else 61
+        q = int(rq) if rq.isdigit() else 53
+        e = None
+
+    if not rabin_miller(p, verbose=False) or not rabin_miller(q, verbose=False):
+        print("  WARNING: p or q is not prime — results will be wrong.")
+
+    public, private, phi = generate_keys(p, q, e)
+    (e, n), (d, _) = public, private
+
+    print("\n  KEY GENERATION")
+    print(f"    p            = {p}")
+    print(f"    q            = {q}")
+    print(f"    n = p x q    = {n}")
+    print(f"    phi(n)       = ({p}-1)({q}-1) = {phi}")
+    print(f"    e            = {e}      (gcd(e, phi) = {gcd(e, phi)})")
+    print(f"    d = e^-1 mod phi = {d}")
+    print(f"    check: e x d mod phi = {e * d % phi}")
+    print(f"\n    PUBLIC KEY  = ({e}, {n})")
+    print(f"    PRIVATE KEY = ({d}, {n})")
+
+    message = input("\nEnter the plaintext message: ").strip()
+    if not message:
+        message = "RSA"
+        print(f"(empty input — using default: {message})")
+
+    if max(ord(ch) for ch in message) >= n:
+        print(f"  ERROR: n = {n} is too small for these characters.")
+        print("  Choose larger primes (try option 2).")
+        return
+
+    cipher = encrypt_blocks(message, e, n)
+    recovered = decrypt_blocks(cipher, d, n)
+
+    print(f"\n  Plaintext  : {message}")
+    print(f"  ASCII      : {[ord(c) for c in message]}")
+    print(f"  Ciphertext : {cipher}")
+    print(f"  Decrypted  : {recovered}")
+
+    print("\n  CHARACTER BY CHARACTER:")
+    for ch, c in zip(message, cipher):
+        print(f"    '{ch}' ({ord(ch):>3})  --^{e} mod {n}-->  {c:<12}"
+              f"  --^{d} mod {n}-->  {pow(c, d, n):>3} = '{chr(pow(c, d, n))}'")
+
+    print("\n  VERIFICATION :",
+          "SUCCESS — original recovered" if recovered == message else "FAILED")
+
+
+if __name__ == "__main__":
+    main()
+
+
+====================================================================================================
+ 1.13  p11_diffie_hellman.py
+ F:\crypto\p11_diffie_hellman.py
+ Python  |  115 lines  |  3.8 KB
+====================================================================================================
+
+"""
+Program 11 — Diffie-Hellman Key Exchange
+CSE-4232P Cryptography and Network Security Lab
+
+Two parties who have never met agree on a shared secret over a completely
+PUBLIC channel.  This is KEY AGREEMENT, not encryption — it produces a
+shared number, nothing more.
+
+    PUBLIC : prime q, primitive root alpha of q
+    Alice  : secret XA  ->  YA = alpha^XA mod q
+    Bob    : secret XB  ->  YB = alpha^XB mod q
+    exchange YA and YB in the open
+    Alice  : K = YB^XA mod q
+    Bob    : K = YA^XB mod q
+
+Both reach the same K because
+    (alpha^XB)^XA = alpha^(XA.XB) = (alpha^XA)^XB   (mod q)
+
+Security rests on the DISCRETE LOGARITHM problem: recovering XA from
+alpha^XA mod q is infeasible for large q.
+"""
+
+import random
+
+from p07_rabin_miller import rabin_miller
+
+
+def is_primitive_root(a, q):
+    """Check that a generates every value 1..q-1 (i.e. its order is q-1)."""
+    seen, x = set(), 1
+    for _ in range(q - 1):
+        x = (x * a) % q
+        seen.add(x)
+    return len(seen) == q - 1
+
+
+def find_primitive_root(q):
+    for a in range(2, q):
+        if is_primitive_root(a, q):
+            return a
+    return None
+
+
+def main():
+    print("=" * 60)
+    print("PROGRAM 11 — DIFFIE-HELLMAN KEY EXCHANGE")
+    print("=" * 60)
+
+    rq = input("\nEnter prime q [default 353]: ").strip()
+    q = int(rq) if rq.isdigit() else 353
+
+    if not rabin_miller(q, verbose=False):
+        print(f"  WARNING: {q} is not prime.")
+
+    ra = input(f"Enter primitive root alpha [default 3]: ").strip()
+    alpha = int(ra) if ra.isdigit() else 3
+
+    if q < 2000 and not is_primitive_root(alpha, q):
+        found = find_primitive_root(q)
+        print(f"  {alpha} is NOT a primitive root of {q} — using {found} instead.")
+        alpha = found
+
+    rxa = input("Enter Alice's secret XA [default 97]: ").strip()
+    rxb = input("Enter Bob's secret XB   [default 233]: ").strip()
+    XA = int(rxa) if rxa.isdigit() else 97
+    XB = int(rxb) if rxb.isdigit() else 233
+
+    print("\n  PUBLIC PARAMETERS (everyone knows these, attacker included)")
+    print(f"    prime q        = {q}")
+    print(f"    primitive root = {alpha}")
+
+    YA = pow(alpha, XA, q)
+    YB = pow(alpha, XB, q)
+
+    print("\n  PRIVATE VALUES (never transmitted)")
+    print(f"    Alice's XA = {XA}")
+    print(f"    Bob's   XB = {XB}")
+
+    print("\n  PUBLIC VALUES (sent across the open channel)")
+    print(f"    Alice computes YA = {alpha}^{XA} mod {q} = {YA}")
+    print(f"    Bob   computes YB = {alpha}^{XB} mod {q} = {YB}")
+    print(f"    Alice --- YA={YA} ---> Bob")
+    print(f"    Alice <--- YB={YB} --- Bob")
+
+    KA = pow(YB, XA, q)
+    KB = pow(YA, XB, q)
+
+    print("\n  SHARED SECRET")
+    print(f"    Alice: K = YB^XA mod q = {YB}^{XA} mod {q} = {KA}")
+    print(f"    Bob  : K = YA^XB mod q = {YA}^{XB} mod {q} = {KB}")
+
+    print("\n  VERIFICATION :",
+          f"SUCCESS — both parties share K = {KA}" if KA == KB else "FAILED")
+
+    print(f"\n  The attacker saw q={q}, alpha={alpha}, YA={YA}, YB={YB}")
+    print(f"  but NOT the shared secret {KA}, which never crossed the wire.")
+
+    # -------------------------------------------------- MITM demonstration
+    print("\n  " + "-" * 50)
+    print("  MAN-IN-THE-MIDDLE WEAKNESS")
+    print("  " + "-" * 50)
+    XM = random.randint(2, q - 2)
+    YM = pow(alpha, XM, q)
+    K1 = pow(YA, XM, q)          # Mallory <-> Alice
+    K2 = pow(YB, XM, q)          # Mallory <-> Bob
+    print(f"    Mallory picks XM = {XM}, sends YM = {YM} to BOTH parties.")
+    print(f"    Alice ends up sharing K1 = {K1} with MALLORY (thinking it is Bob)")
+    print(f"    Bob   ends up sharing K2 = {K2} with MALLORY (thinking it is Alice)")
+    print("    Mallory decrypts, reads, re-encrypts, forwards. Neither notices.")
+    print("\n    FIX: authenticate the exchanged values with digital")
+    print("         signatures or certificates (this is what TLS does).")
+
+
+if __name__ == "__main__":
+    main()
+
+
+====================================================================================================
+ 1.14  p12_pgp_transmit.py
+ F:\crypto\p12_pgp_transmit.py
+ Python  |  129 lines  |  5.0 KB
+====================================================================================================
+
+"""
+Program 12 — PGP: (a) Authentication  (b) Confidentiality for TRANSMITTING data
+CSE-4232P Cryptography and Network Security Lab
+
+Part (a) — AUTHENTICATION
+    1. h = SHA-1(M)
+    2. Signature = E_PRa(h)          encrypt hash with SENDER'S PRIVATE key
+    3. send Signature || M
+    4. receiver: D_PUa(Signature) and compare with its own SHA-1(M)
+
+Part (b) — CONFIDENTIALITY FOR TRANSMISSION
+    1. generate a random one-time 128-bit session key Ks
+    2. compress the message with ZIP
+    3. encrypt with the symmetric cipher under Ks
+    4. encrypt Ks with the RECIPIENT'S PUBLIC key
+    5. Radix-64 convert so the result survives email
+"""
+
+from pgp_core import (demo_keys, make_session_key, pgp_sign, pgp_verify,
+                      pgp_encrypt, pgp_decrypt, radix64_encode,
+                      radix64_decode, preview, segment, SEGMENT_LIMIT)
+
+
+def main():
+    print("=" * 66)
+    print("PROGRAM 12 — PGP: AUTHENTICATION + CONFIDENTIALITY (TRANSMISSION)")
+    print("=" * 66)
+
+    message = input("\nEnter the message: ").strip()
+    if not message:
+        message = "Transfer 50000 taka to account 4471"
+        print(f"(empty input — using default: {message})")
+
+    # Two key pairs: Alice signs with hers, Bob receives with his.
+    (e_a, n_a), (d_a, _) = demo_keys()
+    (e_b, n_b), (d_b, _) = demo_keys()
+
+    print("\n  KEYS")
+    print(f"    Alice public  (e,n) = ({e_a}, {n_a})")
+    print(f"    Alice private (d,n) = ({d_a}, {n_a})")
+    print(f"    Bob   public  (e,n) = ({e_b}, {n_b})")
+
+    # ---------------------------------------------------------- PART (A)
+    print("\n" + "-" * 66)
+    print("  PART (a)  AUTHENTICATION")
+    print("-" * 66)
+
+    digest, h, signature = pgp_sign(message, d_a, n_a)
+
+    print("\n  SENDER (Alice)")
+    preview("message M", message)
+    preview("SHA-1(M) full digest", digest)
+    preview("hash reduced mod n", h)
+    preview("Signature = h^d mod n", signature)
+    print("      -> Alice transmits [ Signature || M ]")
+
+    ok, recovered, computed = pgp_verify(message, signature, e_a, n_a)
+
+    print("\n  RECEIVER (Bob)")
+    preview("D_PUa(Signature)", recovered)
+    preview("own SHA-1(M) reduced", computed)
+    print(f"    {'match -> SIGNATURE VALID' if ok else 'MISMATCH -> REJECTED'}")
+
+    # tampering test
+    tampered = message.replace("50000", "90000") if "50000" in message \
+        else message + "X"
+    bad, r2, c2 = pgp_verify(tampered, signature, e_a, n_a)
+    print("\n  TAMPERING TEST — attacker alters the message in transit")
+    preview("altered message", tampered)
+    preview("expected hash", r2)
+    preview("actual hash of altered", c2)
+    print(f"    {'ACCEPTED (bad!)' if bad else 'REJECTED — tampering detected'}")
+    print("    Mallory cannot repair this: fixing the signature would need")
+    print("    Alice's PRIVATE key, which she does not have.")
+
+    # ---------------------------------------------------------- PART (B)
+    print("\n" + "-" * 66)
+    print("  PART (b)  CONFIDENTIALITY FOR TRANSMITTING DATA")
+    print("-" * 66)
+
+    # what actually gets encrypted is the signature plus the message
+    payload = f"{signature}|{message}".encode()
+    Ks = make_session_key() % n_b          # must fit inside Bob's modulus
+
+    compressed, body, enc_key = pgp_encrypt(payload, Ks, e_b, n_b)
+    armoured = radix64_encode(body)
+
+    print("\n  SENDER (Alice)")
+    preview("payload (Signature||M)", f"{len(payload)} bytes")
+    preview("session key Ks (random)", Ks)
+    preview("after ZIP compression", f"{len(compressed)} bytes")
+    preview("after symmetric encrypt", f"{len(body)} bytes")
+    preview("E_PUb(Ks)", enc_key)
+    preview("after Radix-64", armoured)
+    print(f"    expansion from Radix-64  : {len(armoured)/len(body):.4f} "
+          f"(= 4/3 = 33% larger)")
+
+    parts = segment(armoured)
+    print(f"    segments (limit {SEGMENT_LIMIT}) : {len(parts)}")
+    print("      -> Alice emails [ E_PUb(Ks) || Radix64( E_Ks( Z(Sig||M) ) ) ]")
+
+    print("\n  RECEIVER (Bob)")
+    decoded = radix64_decode(armoured)
+    rec_key, rec_comp, data = pgp_decrypt(decoded, enc_key, d_b, n_b)
+    preview("Radix-64 decoded", f"{len(decoded)} bytes")
+    preview("Ks = D_PRb(E_PUb(Ks))", rec_key)
+    preview("matches original Ks?", rec_key == Ks)
+    preview("after decompression", f"{len(data)} bytes")
+
+    sig_str, _, recovered_msg = data.decode().partition("|")
+    preview("recovered message", recovered_msg)
+
+    final_ok, _, _ = pgp_verify(recovered_msg, int(sig_str), e_a, n_a)
+
+    print("\n  " + "=" * 60)
+    print(f"  CONFIDENTIALITY : {'SUCCESS' if recovered_msg == message else 'FAILED'}"
+          f" — message recovered exactly")
+    print(f"  AUTHENTICATION  : {'SUCCESS' if final_ok else 'FAILED'}"
+          f" — signature verified after decryption")
+    print("  " + "=" * 60)
+
+    print("\n  ORDER OF OPERATIONS USED")
+    print("    Sign -> Compress -> Encrypt -> Radix-64 -> Segment")
+    print("    (sign before compress because ZIP is not deterministic;")
+    print("     compress before encrypt because it removes redundancy)")
+
+
+if __name__ == "__main__":
+    main()
+
+
+====================================================================================================
+ 1.15  p13_pgp_storage.py
+ F:\crypto\p13_pgp_storage.py
+ Python  |  119 lines  |  4.5 KB
+====================================================================================================
+
+"""
+Program 13 — PGP: (a) Authentication  (b) Confidentiality for STORING data
+CSE-4232P Cryptography and Network Security Lab
+
+The difference between TRANSMITTING and STORING:
+
+    TRANSMITTING — there is a recipient, so the session key is wrapped with
+                   the RECIPIENT'S PUBLIC KEY and sent alongside the message.
+
+    STORING      — there is no recipient; the file is for YOU, later.  There
+                   is no public key to wrap with and nowhere to send a key.
+                   So the session key is derived from a PASSPHRASE by KEY
+                   CRUNCHING (hashing the passphrase to a fixed-size key).
+                   Nothing extra is stored — you simply retype the passphrase.
+"""
+
+import os
+
+from pgp_core import (demo_keys, pgp_sign, pgp_verify, pgp_encrypt_stored,
+                      pgp_decrypt_stored, radix64_encode, radix64_decode,
+                      preview)
+
+STORE_FILE = "pgp_stored.asc"
+
+
+def main():
+    print("=" * 66)
+    print("PROGRAM 13 — PGP: AUTHENTICATION + CONFIDENTIALITY (STORAGE)")
+    print("=" * 66)
+
+    message = input("\nEnter the data to store: ").strip()
+    if not message:
+        message = "Exam question paper CSE-4232P — confidential until 10 AM"
+        print(f"(empty input — using default)")
+
+    passphrase = input("Enter a pass phrase [default rajshahi university 2026]: ").strip()
+    if not passphrase:
+        passphrase = "rajshahi university 2026"
+
+    (e_a, n_a), (d_a, _) = demo_keys()
+
+    # ---------------------------------------------------------- PART (A)
+    print("\n" + "-" * 66)
+    print("  PART (a)  AUTHENTICATION")
+    print("-" * 66)
+
+    digest, h, signature = pgp_sign(message, d_a, n_a)
+    print("\n  SIGNING")
+    preview("data M", message)
+    preview("SHA-1(M)", digest)
+    preview("Signature = h^d mod n", signature)
+
+    ok, rec, comp = pgp_verify(message, signature, e_a, n_a)
+    print("\n  VERIFYING")
+    preview("D_PUa(Signature)", rec)
+    preview("recomputed hash", comp)
+    print(f"    {'match -> SIGNATURE VALID' if ok else 'MISMATCH'}")
+    print("\n  Why sign stored data at all?  To detect later corruption or")
+    print("  tampering — and to prove WHO created the file.")
+
+    # ---------------------------------------------------------- PART (B)
+    print("\n" + "-" * 66)
+    print("  PART (b)  CONFIDENTIALITY FOR STORING DATA")
+    print("-" * 66)
+
+    payload = f"{signature}|{message}".encode()
+    crunched, Ks, compressed, body = pgp_encrypt_stored(payload, passphrase)
+    armoured = radix64_encode(body)
+
+    print("\n  ENCRYPTING FOR STORAGE")
+    preview("pass phrase", passphrase)
+    preview("SHA-1(passphrase)", crunched)
+    print("      ^ this is KEY CRUNCHING — a phrase of any length becomes")
+    print("        a fixed-size key, and nothing is written to disk")
+    preview("payload (Sig||M)", f"{len(payload)} bytes")
+    preview("after ZIP compression", f"{len(compressed)} bytes")
+    preview("after symmetric encrypt", f"{len(body)} bytes")
+    preview("after Radix-64", armoured)
+
+    with open(STORE_FILE, "w") as f:
+        f.write(armoured)
+    print(f"\n    written to disk: {STORE_FILE} ({os.path.getsize(STORE_FILE)} bytes)")
+    print("    NOTE: no encrypted session key is stored — unlike the")
+    print("          transmission case, there is nothing to wrap.")
+
+    # ------------------------------------------------- read it back later
+    print("\n  READING IT BACK (later session)")
+    with open(STORE_FILE) as f:
+        from_disk = f.read()
+
+    decoded = radix64_decode(from_disk)
+    data = pgp_decrypt_stored(decoded, passphrase)
+    sig_str, _, recovered = data.decode().partition("|")
+
+    preview("file read from disk", f"{len(from_disk)} characters")
+    preview("recovered data", recovered)
+
+    final_ok, _, _ = pgp_verify(recovered, int(sig_str), e_a, n_a)
+
+    # what happens with the wrong passphrase
+    print("\n  WRONG PASS PHRASE TEST")
+    try:
+        pgp_decrypt_stored(decoded, passphrase + "x")
+        print("    decryption succeeded — this should not happen")
+    except Exception:
+        print("    decompression fails -> data unreadable. Correct behaviour.")
+
+    print("\n  " + "=" * 60)
+    print(f"  CONFIDENTIALITY : {'SUCCESS' if recovered == message else 'FAILED'}")
+    print(f"  AUTHENTICATION  : {'SUCCESS' if final_ok else 'FAILED'}")
+    print("  " + "=" * 60)
+
+    print("\n  TRANSMISSION vs STORAGE — the one difference")
+    print("    transmission : Ks wrapped with the RECIPIENT'S PUBLIC KEY")
+    print("    storage      : Ks derived from a PASS PHRASE by key crunching")
+
+
+if __name__ == "__main__":
+    main()
+
+
+====================================================================================================
+ 1.16  p14_pgp_combined.py
+ F:\crypto\p14_pgp_combined.py
+ Python  |  136 lines  |  5.3 KB
+====================================================================================================
+
+"""
+Program 14 — PGP: (a) Confidentiality for STORING data
+                  (b) Authentication AND Confidentiality together
+CSE-4232P Cryptography and Network Security Lab
+
+Part (b) is the full PGP pipeline — every service in its correct order:
+
+    SENDING
+      M --> SHA-1 --> h --> E_PRa(h) = Signature
+      [ Signature || M ] --> ZIP --> E_Ks(...)        Ks random 128-bit
+      Ks --> E_PUb(Ks)
+      [ E_PUb(Ks) || E_Ks( Z(Sig||M) ) ] --> Radix-64 --> segment
+
+    RECEIVING
+      reassemble -> Radix-64 decode -> D_PRb to get Ks -> D_Ks
+                 -> decompress -> split -> verify with PUa
+"""
+
+from pgp_core import (demo_keys, make_session_key, pgp_sign, pgp_verify,
+                      pgp_encrypt, pgp_decrypt, pgp_encrypt_stored,
+                      pgp_decrypt_stored, radix64_encode, radix64_decode,
+                      preview, segment, reassemble, SEGMENT_LIMIT)
+
+
+def main():
+    print("=" * 66)
+    print("PROGRAM 14 — PGP: STORAGE CONFIDENTIALITY + FULL COMBINED SERVICE")
+    print("=" * 66)
+
+    message = input("\nEnter the message: ").strip()
+    if not message:
+        message = "Result sheet: Sazid, CSE-4232P, marks withheld until publication"
+        print("(empty input — using default)")
+
+    # ---------------------------------------------------------- PART (A)
+    print("\n" + "-" * 66)
+    print("  PART (a)  CONFIDENTIALITY FOR STORING DATA")
+    print("-" * 66)
+
+    passphrase = "rajshahi university 2026"
+    crunched, Ks_store, compressed, body = pgp_encrypt_stored(
+        message.encode(), passphrase)
+    armoured_store = radix64_encode(body)
+
+    print("\n  ENCRYPT FOR STORAGE")
+    preview("pass phrase", passphrase)
+    preview("key crunching SHA-1(pp)", crunched)
+    preview("original size", f"{len(message)} bytes")
+    preview("after ZIP", f"{len(compressed)} bytes")
+    preview("after encryption", f"{len(body)} bytes")
+    preview("after Radix-64", armoured_store)
+
+    back = pgp_decrypt_stored(radix64_decode(armoured_store), passphrase).decode()
+    preview("decrypted back", back)
+    print(f"    STORAGE TEST : {'SUCCESS' if back == message else 'FAILED'}")
+
+    # ---------------------------------------------------------- PART (B)
+    print("\n" + "-" * 66)
+    print("  PART (b)  AUTHENTICATION AND CONFIDENTIALITY TOGETHER")
+    print("-" * 66)
+
+    (e_a, n_a), (d_a, _) = demo_keys()      # Alice — signing
+    (e_b, n_b), (d_b, _) = demo_keys()      # Bob   — receiving
+
+    print("\n  STEP 1  SIGN with the sender's private key")
+    digest, h, signature = pgp_sign(message, d_a, n_a)
+    preview("SHA-1(M)", digest)
+    preview("Signature = h^d mod n", signature)
+
+    print("\n  STEP 2  COMPRESS  (signature + message together)")
+    payload = f"{signature}|{message}".encode()
+    Ks = make_session_key() % n_b
+    compressed2, body2, enc_key = pgp_encrypt(payload, Ks, e_b, n_b)
+    preview("payload size", f"{len(payload)} bytes")
+    preview("after ZIP", f"{len(compressed2)} bytes")
+
+    print("\n  STEP 3  ENCRYPT with a one-time session key")
+    preview("session key Ks", Ks)
+    preview("encrypted body", f"{len(body2)} bytes")
+
+    print("\n  STEP 4  WRAP the session key with the recipient's public key")
+    preview("E_PUb(Ks)", enc_key)
+
+    print("\n  STEP 5  RADIX-64 so it survives email")
+    armoured = radix64_encode(body2)
+    preview("armoured output", armoured)
+    preview("expansion factor", f"{len(armoured)/len(body2):.4f}  (4/3 = 33%)")
+
+    print("\n  STEP 6  SEGMENT if over the size limit")
+    parts = segment(armoured)
+    preview(f"segments (limit {SEGMENT_LIMIT})", len(parts))
+
+    # ------------------------------------------------------ receiving side
+    print("\n  " + "-" * 60)
+    print("  RECEIVER SIDE — every step reversed")
+    print("  " + "-" * 60)
+
+    joined = reassemble(parts)
+    print("\n  STEP 1  Reassemble segments")
+    preview("matches sent form?", joined == armoured)
+
+    print("\n  STEP 2  Radix-64 decode")
+    decoded = radix64_decode(joined)
+    preview("decoded size", f"{len(decoded)} bytes")
+
+    print("\n  STEP 3  Recover Ks with the receiver's private key")
+    rec_key, rec_comp, data = pgp_decrypt(decoded, enc_key, d_b, n_b)
+    preview("recovered Ks", rec_key)
+    preview("matches original?", rec_key == Ks)
+
+    print("\n  STEP 4  Decrypt and decompress")
+    preview("decompressed size", f"{len(data)} bytes")
+
+    print("\n  STEP 5  Split and verify the signature")
+    sig_str, _, recovered_msg = data.decode().partition("|")
+    ok, r, c = pgp_verify(recovered_msg, int(sig_str), e_a, n_a)
+    preview("recovered message", recovered_msg)
+    preview("D_PUa(Signature)", r)
+    preview("recomputed hash", c)
+
+    print("\n  " + "=" * 60)
+    print(f"  CONFIDENTIALITY : {'SUCCESS' if recovered_msg == message else 'FAILED'}")
+    print(f"  AUTHENTICATION  : {'SUCCESS' if ok else 'FAILED'}")
+    print("  " + "=" * 60)
+
+    print("\n  WHY THIS ORDER")
+    print("    sign before compress : ZIP is not deterministic, so the")
+    print("                           signature must cover the original text")
+    print("    compress before encrypt: compression removes the redundancy")
+    print("                           that cryptanalysis feeds on")
+    print("    sign before encrypt  : plaintext + signature can be shown to")
+    print("                           an arbitrator without revealing Ks")
+
+
+if __name__ == "__main__":
+    main()
+
+
+====================================================================================================
+ 1.17  pgp_core.py
+ F:\crypto\pgp_core.py
+ Python  |  207 lines  |  7.0 KB
+====================================================================================================
+
+"""
+pgp_core.py — the PGP engine shared by programs 12, 13 and 14
+CSE-4232P Cryptography and Network Security Lab
+
+PGP is not one algorithm — it is an ASSEMBLY of the algorithms already
+implemented in this lab, wired together in a fixed order:
+
+    SENDING   : Sign -> Compress -> Encrypt -> Radix-64 -> (Segment)
+    RECEIVING : (Reassemble) -> Radix-64 decode -> Decrypt -> Decompress -> Verify
+
+Components used here
+    SHA-1        p09_sha1.py        (our own implementation)
+    RSA          p10_rsa.py         (our own implementation)
+    symmetric    CAST-128 substitute — a simple keystream cipher, since
+                 CAST-128 is not in the Python standard library.  The PGP
+                 STRUCTURE is what the lab is testing, and the structure is
+                 identical whichever block cipher fills this slot.
+    ZIP          zlib               (this IS the algorithm PGP uses)
+    Radix-64     written out below, not imported
+"""
+
+import os
+import zlib
+
+from p09_sha1 import sha1
+from p10_rsa import generate_keys, mod_inverse
+
+# --------------------------------------------------------------- Radix-64
+ALPHABET = ("ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            "abcdefghijklmnopqrstuvwxyz"
+            "0123456789+/")
+PAD = "="
+
+
+def radix64_encode(data: bytes) -> str:
+    """
+    Convert binary to printable ASCII, 3 bytes -> 4 characters.
+    Email carries only 7-bit text, but encrypted data is arbitrary 8-bit
+    binary, so this conversion is what lets ciphertext survive a mail gateway.
+    Cost: the message grows by 4/3 = 33%.
+    """
+    out = ""
+    for i in range(0, len(data), 3):
+        chunk = data[i:i + 3]
+        n = len(chunk)
+        # pack up to three bytes into one 24-bit integer
+        value = chunk[0] << 16
+        if n > 1:
+            value |= chunk[1] << 8
+        if n > 2:
+            value |= chunk[2]
+        # split the 24 bits into four 6-bit groups
+        out += ALPHABET[(value >> 18) & 63]
+        out += ALPHABET[(value >> 12) & 63]
+        out += ALPHABET[(value >> 6) & 63] if n > 1 else PAD
+        out += ALPHABET[value & 63] if n > 2 else PAD
+    return out
+
+
+def radix64_decode(text: str) -> bytes:
+    text = "".join(ch for ch in text if ch in ALPHABET or ch == PAD)
+    out = bytearray()
+    for i in range(0, len(text), 4):
+        group = text[i:i + 4]
+        pads = group.count(PAD)
+        value = 0
+        for ch in group:
+            value = (value << 6) | (ALPHABET.index(ch) if ch != PAD else 0)
+        out.append((value >> 16) & 0xFF)
+        if pads < 2:
+            out.append((value >> 8) & 0xFF)
+        if pads < 1:
+            out.append(value & 0xFF)
+    return bytes(out)
+
+
+# ------------------------------------------------- symmetric cipher (CAST substitute)
+def symmetric_crypt(data: bytes, session_key: int) -> bytes:
+    """
+    Stands in for CAST-128 / IDEA / 3DES.
+
+    A keystream is generated by repeatedly hashing (key || counter) with our
+    own SHA-1, then XORed with the data.  Encryption and decryption are the
+    same operation, because XOR is its own inverse.
+    """
+    out = bytearray()
+    counter = 0
+    while len(out) < len(data):
+        block = sha1(f"{session_key}:{counter}".encode())
+        out += bytes.fromhex(block)
+        counter += 1
+    return bytes(a ^ b for a, b in zip(data, out[:len(data)]))
+
+
+def make_session_key() -> int:
+    """A fresh 128-bit random session key — used for ONE message only."""
+    return int.from_bytes(os.urandom(16), "big")
+
+
+# ------------------------------------------------------------- RSA helpers
+def rsa_apply(value: int, exponent: int, n: int) -> int:
+    return pow(value, exponent, n)
+
+
+def rsa_encrypt_int(value: int, e: int, n: int) -> int:
+    if value >= n:
+        raise ValueError("value too large for this modulus")
+    return pow(value, e, n)
+
+
+def hash_to_int(digest_hex: str, n: int) -> int:
+    """Reduce a hex digest to an integer that fits inside the RSA modulus."""
+    return int(digest_hex, 16) % n
+
+
+# ------------------------------------------------------------ PGP SERVICES
+def pgp_sign(message: str, priv_d: int, n: int):
+    """
+    AUTHENTICATION.
+      1. h = SHA-1(M)
+      2. Signature = h^d mod n     (encrypt hash with sender's PRIVATE key)
+      3. transmit Signature || M
+    """
+    digest = sha1(message.encode())
+    h = hash_to_int(digest, n)
+    signature = pow(h, priv_d, n)
+    return digest, h, signature
+
+
+def pgp_verify(message: str, signature: int, pub_e: int, n: int):
+    """
+    Recover the hash with the sender's PUBLIC key and compare with a freshly
+    computed hash of the received message.
+    """
+    recovered = pow(signature, pub_e, n)
+    digest = sha1(message.encode())
+    computed = hash_to_int(digest, n)
+    return recovered == computed, recovered, computed
+
+
+def pgp_encrypt(data: bytes, session_key: int, recipient_e: int, recipient_n: int):
+    """
+    CONFIDENTIALITY FOR TRANSMISSION.
+      1. compress with ZIP
+      2. encrypt with the symmetric cipher under the session key
+      3. encrypt the session key with the RECIPIENT'S PUBLIC key
+    """
+    compressed = zlib.compress(data)
+    body = symmetric_crypt(compressed, session_key)
+    enc_key = rsa_encrypt_int(session_key, recipient_e, recipient_n)
+    return compressed, body, enc_key
+
+
+def pgp_decrypt(body: bytes, enc_key: int, recipient_d: int, recipient_n: int):
+    session_key = pow(enc_key, recipient_d, recipient_n)
+    compressed = symmetric_crypt(body, session_key)
+    data = zlib.decompress(compressed)
+    return session_key, compressed, data
+
+
+def pgp_encrypt_stored(data: bytes, passphrase: str):
+    """
+    CONFIDENTIALITY FOR STORAGE.
+
+    The difference from transmission: there is no recipient, so there is no
+    public key to wrap the session key with.  Instead the session key is
+    derived directly from a PASSPHRASE by KEY CRUNCHING — hashing the
+    passphrase down to a fixed-size key.  Nothing extra needs to be stored.
+    """
+    crunched = sha1(passphrase.encode())
+    session_key = int(crunched, 16)
+    compressed = zlib.compress(data)
+    body = symmetric_crypt(compressed, session_key)
+    return crunched, session_key, compressed, body
+
+
+def pgp_decrypt_stored(body: bytes, passphrase: str):
+    session_key = int(sha1(passphrase.encode()), 16)
+    compressed = symmetric_crypt(body, session_key)
+    return zlib.decompress(compressed)
+
+
+# ------------------------------------------------------------- segmentation
+SEGMENT_LIMIT = 50000        # historic email limit, in octets
+
+
+def segment(text: str, limit: int = SEGMENT_LIMIT):
+    return [text[i:i + limit] for i in range(0, len(text), limit)]
+
+
+def reassemble(parts):
+    return "".join(parts)
+
+
+# ------------------------------------------------------------------ display
+def preview(label, value, width=64):
+    s = value if isinstance(value, str) else str(value)
+    if len(s) > width:
+        s = s[:width] + f" ... ({len(s)} total)"
+    print(f"    {label:<26}: {s}")
+
+
+def demo_keys():
+    """A small RSA key pair, big enough to hold a reduced SHA-1 hash."""
+    p, q = 1000003, 1000033        # both prime
+    public, private, phi = generate_keys(p, q, e=65537)
+    return public, private
+
+
+####################################################################################################
+#                        PART 2  -  DISTRIBUTED DATABASE MANAGEMENT SYSTEMS                        #
+#             Hadoop MapReduce WordCount and Hive distributed / partitioned query lab.             #
+#                                6 files  |  520 lines  |  F:\ddbms                                #
+####################################################################################################
+
+
+====================================================================================================
+ 2.1  commands.txt
+ F:\ddbms\commands.txt
+ Notes / Commands  |  85 lines  |  1.6 KB
+====================================================================================================
+
+1. Check your container:
+docker ps -a
+
+2. Start Hadoop container
+docker start myHadoop
+
+## create new container
+=>  docker run -p 9870:9870 -p 8088:8088 -it --name=ddbms macio232/hadoop-pseudo-distributed-mode   // here ddbms is container name
+
+3. Access Hadoop container
+docker exec -it myHadoop bash
+
+4. Check Hadoop services
+jps
+
+5. Check HDFS
+hdfs dfs -ls /
+
+6. Go to root directory
+
+cd /root
+
+Check:
+
+ls
+
+You should see:
+
+WordCount.java or empty directory if you haven't created any files yet.
+
+7. In another terminal: (if WordCount.java is not present in the container)
+docker cp "%USERPROFILE%\Desktop\WordCount.java" myHadoop:/root/
+
+8. Compile WordCount.java
+javac -classpath $(hadoop classpath) WordCount.java
+
+ls 
+
+You should see:
+WordCount.java
+WordCount.class
+WordCount$Map.class
+WordCount$Reduce.class
+
+
+9. Create the jar file
+jar -cvf WordCount.jar WordCount*.class
+
+ls
+
+You should see:
+WordCount.jar
+
+10. Create a test input file (inside /root directory of the container)
+
+echo "hello world hello hadoop mapreduce hadoop" > input.txt
+
+cat input.txt - to verify the content of the file.
+
+11. Create input directory in HDFS
+hdfs dfs -ls /
+
+hdfs dfs -rm -r /wordinput
+hdfs dfs -mkdir /wordinput
+
+12. Copy the input file to HDFS
+hdfs dfs -put input.txt /wordinput
+
+verify the file is in HDFS:
+hdfs dfs -ls /wordinput
+
+hdfs dfs -cat /wordinput/input.txt
+
+13. delete output directory in HDFS if it exists
+hdfs dfs -rm -r /wordoutput
+
+
+14. Run the WordCount job
+hadoop jar WordCount.jar WordCount /wordinput /wordoutput
+
+15. Check the output of the job
+hdfs dfs -ls /wordoutput
+
+hdfs dfs -cat /wordoutput/part-00000
+
+
+====================================================================================================
+ 2.2  WordCount.java
+ F:\ddbms\WordCount.java
+ Java  |  142 lines  |  5.9 KB
+====================================================================================================
+
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.StringTokenizer;
+
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.*;
+
+/*
+ * ============================================================
+ *  MapReduce — 7 tasks in ONE file
+ * ============================================================
+ *  একবার compile করুন, তারপর 3rd argument দিয়ে task বদলান:
+ *
+ *  hadoop jar WordCount.jar WordCount /wordinput /wordoutput 1
+ *
+ *  1 = Word frequency                (কোন শব্দ কতবার)
+ *  2 = Character frequency           (কোন অক্ষর কতবার)
+ *  3 = Word length frequency         (কত-অক্ষরের শব্দ কতটি)
+ *  4 = Lines with same word count    (সমান শব্দসংখ্যার line কতটি)
+ *  5 = Words per line                (প্রতি line-এ কতটি শব্দ)
+ *  6 = Characters per line           (প্রতি line-এ কতটি অক্ষর)
+ *  7 = Lines with same char count    (সমান অক্ষরসংখ্যার line কতটি)
+ * ============================================================
+ */
+public class WordCount {
+
+    // ============================================================
+    // MAPPER
+    // ============================================================
+    public static class Map extends MapReduceBase
+            implements Mapper<LongWritable, Text, Text, IntWritable> {
+
+        private int task;                                  // কোন task চলবে
+        private Text outKey = new Text();                  // পুনঃব্যবহারযোগ্য key
+        private IntWritable outValue = new IntWritable();  // পুনঃব্যবহারযোগ্য value
+
+        // job শুরুর সময় একবার চলে — task নম্বর পড়ে নেয়
+        public void configure(JobConf job) {
+            task = job.getInt("task", 1);
+        }
+
+        public void map(LongWritable key, Text value,
+                        OutputCollector<Text, IntWritable> output,
+                        Reporter reporter) throws IOException {
+
+            String line = value.toString();
+            StringTokenizer st = new StringTokenizer(line);
+
+            switch (task) {
+
+                case 1:  // প্রতিটি শব্দ → 1
+                    while (st.hasMoreTokens())
+                        emit(output, st.nextToken(), 1);
+                    break;
+
+                case 2:  // প্রতিটি অক্ষর → 1  (space বাদ)
+                    for (int i = 0; i < line.length(); i++)
+                        if (line.charAt(i) != ' ')
+                            emit(output, "" + line.charAt(i), 1);
+                    break;
+
+                case 3:  // শব্দের দৈর্ঘ্য → 1
+                    while (st.hasMoreTokens())
+                        emit(output, "" + st.nextToken().length(), 1);
+                    break;
+
+                case 4:  // line-এর শব্দসংখ্যা → 1
+                    emit(output, "" + st.countTokens(), 1);
+                    break;
+
+                case 5:  // Line_offset → শব্দসংখ্যা
+                    emit(output, "Line_" + key.get(), st.countTokens());
+                    break;
+
+                case 6:  // Line_offset → অক্ষরসংখ্যা
+                    emit(output, "Line_" + key.get(), line.length());
+                    break;
+
+                case 7:  // line-এর অক্ষরসংখ্যা → 1
+                    emit(output, "" + line.length(), 1);
+                    break;
+            }
+        }
+
+        // একটি key-value জোড়া পাঠানোর ছোট helper
+        private void emit(OutputCollector<Text, IntWritable> output,
+                          String k, int v) throws IOException {
+            outKey.set(k);
+            outValue.set(v);
+            output.collect(outKey, outValue);
+        }
+    }
+
+    // ============================================================
+    // REDUCER — সব task-এর জন্য একটাই: যোগ করো
+    // ============================================================
+    public static class Reduce extends MapReduceBase
+            implements Reducer<Text, IntWritable, Text, IntWritable> {
+
+        public void reduce(Text key, Iterator<IntWritable> values,
+                           OutputCollector<Text, IntWritable> output,
+                           Reporter reporter) throws IOException {
+
+            int sum = 0;
+            while (values.hasNext())
+                sum += values.next().get();
+
+            output.collect(key, new IntWritable(sum));
+        }
+    }
+
+    // ============================================================
+    // MAIN
+    // ============================================================
+    public static void main(String[] args) throws Exception {
+
+        JobConf conf = new JobConf(WordCount.class);
+        conf.setJobName("MapReduce Task");
+
+        // 3rd argument = task নম্বর; না দিলে 1 ধরা হবে
+        int task = (args.length > 2) ? Integer.parseInt(args[2]) : 1;
+        conf.setInt("task", task);
+
+        conf.setOutputKeyClass(Text.class);
+        conf.setOutputValueClass(IntWritable.class);
+
+        conf.setMapperClass(Map.class);
+        conf.setCombinerClass(Reduce.class);
+        conf.setReducerClass(Reduce.class);
+
+        conf.setInputFormat(TextInputFormat.class);
+        conf.setOutputFormat(TextOutputFormat.class);
+
+        FileInputFormat.setInputPaths(conf, new Path(args[0]));
+        FileOutputFormat.setOutputPath(conf, new Path(args[1]));
+
+        JobClient.runJob(conf);
+    }
+}
+
+
+====================================================================================================
+ 2.3  step.txt
+ F:\ddbms\hive_distributed_query\step.txt
+ Notes / Commands  |  9 lines  |  0.2 KB
+====================================================================================================
+
+1. create and run a container
+
+2. create database and tables
+
+3. copy csv/txt files into the container
+
+4. import data from csv/txt files into the database tables
+
+5. perform specific queries
+
+
+====================================================================================================
+ 2.4  create folder.txt
+ F:\ddbms\hive_distributed_query\create folder.txt
+ Notes / Commands  |  56 lines  |  1.7 KB
+====================================================================================================
+
+//start container
+docker container start -i myHadoop
+
+// create folder, database and table
+create folder
+hive
+create database BankDB
+use BankDB
+create table
+show tables
+(create table commands)
+desc student
+describe formatted student -> show more details about table
+quite   // to exit from hive
+
+
+
+// dataset insertion from windows->linux->Hadoop (open another cmd and do there)
+
+docker cp file_location_in_windows myHadoop:\test     \\myHadoop is my container here
+docker cp D:/files/customer.csv myHadoop:\test
+load data local inpath '/test/customer.csv' into table BankDB.customer (before insert remove column name from csv file)
+
+// TO LOAD data into partitioned table
+1. create a temp table with same structure but without partition
+2. then load dataset data into tmp table
+3. then copy from tmp table to partitioned original table
+->insert overwrite table bankdb.account partition(branch_id) select account_id, customer_id, balance, branch_id from account_tmp
+-> set hive.exec.dynamic.partition=true
+-> set hive.exec.dynamic.partition.mode=nonstrict
+
+->show partitions Account (partition column a je koyta unique value ache sei koyta partition toiry hbee)
+
+// query in partitions
+-> hdfs dfs -ls /BankDB/account // show all partitions as files
+-> select * where branch_id=105 // show data from partition branch_id=105
+-> insert into table bankdb.account
+partition (branch_id=5)
+values(2002,500,56456.55),
+(2222,501,56456.55);
+
+-> drop a partiion , drop korar por repair korte hbe nahole data geleo structure a partition dekhabe
+alter table account
+drop partition(branch_id=105)
+
+msck repair table account // repair 
+-> create a new partition
+->  
+
+
+
+
+// insert manually data if sir asks
+insert into BankDB.customer values(11,'Sadnur', 'a@gmail.com')
+
+
+====================================================================================================
+ 2.5  all_commands.txt
+ F:\ddbms\hive_distributed_query\all_commands.txt
+ Notes / Commands  |  138 lines  |  3.8 KB
+====================================================================================================
+
+## check docker running or not
+=> docker run hello-world
+
+## run once before create container first time
+=> docker pull macio232/hadoop-pseudo-distributed-mode
+
+## create new container
+=>  docker run -p 9870:9870 -p 8088:8088 -it --name=myHadoop macio232/hadoop-pseudo-distributed-mode   // here myHadoop is container name
+
+## start and stop command to run container ( do in another terminal)
+=> docker start -i myHadoop
+=> docker stop myHadoop
+
+
+## check existing folder list
+=> hdfs dfs -ls /
+
+## create new folder ( sir may ask to create a folder with our roll)
+=> hdfs dfs -mkdir -p /bankdb
+
+
+## create database and tables
+=> hive     // enter into hive
+=> quit      // quite from hive
+
+// **everytime when entering hive at first we must use the command 'use bankdb'
+
+=> create database bankdb;
+=> show databases;
+=> use bankdb;
+
+=> show tables;    //see all tables
+// create customer table in /bankdb/customer folder
+=> CREATE TABLE customer (      
+    customer_id BIGINT,
+    name VARCHAR(100),
+    email VARCHAR(100)
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/bankdb/customer';
+
+=> desc customer;    // short description about customer table
+=> describe formatted customer;     // large description about table
+
+
+## create table with partitioned column
+=> CREATE TABLE account (
+    account_id BIGINT,
+    customer_id BIGINT,
+    balance DECIMAL(12,2)
+)
+PARTITIONED BY (
+    branch_id INT
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/bankdb/account';
+
+
+## dataset insertion from windows->linux->Hadoop (open another cmd and do there)
+
+syntax: docker cp file_location_in_windows myHadoop:\test     \\myHadoop is my container here
+=> docker cp D:/files/customer.csv myHadoop:/test/customer.csv    // ddbms is the container name
+(sob file evabe copy korte hbe Linux a)
+// test a nahole root folder a nite hbe
+
+// to load data in non-partitioned table (do in hive)
+=> load data local inpath '/test/customer.csv' into table bankdb.customer (before insert remove column name from csv file)
+
+// TO LOAD data into partitioned table
+=> set hive.exec.dynamic.partition=true
+=> set hive.exec.dynamic.partition.mode=nonstrict
+
+1. create a temp table with same structure but without partition
+=> CREATE TABLE account_tmp (
+    account_id BIGINT,
+    customer_id BIGINT,
+    branch_id INT,
+    balance DECIMAL(12,2)
+    
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/bankdb/account_tmp';
+
+2. then load dataset data into tmp table
+=> load data local inpath '/test/Account.csv' into table bankdb.account_tmp;
+
+3. then copy from tmp table to partitioned original table
+->insert overwrite table bankdb.account partition(branch_id) select account_id, customer_id, balance, branch_id from account_tmp   // column sequence thik rakhte hbe
+
+
+## show partitions
+=> show partitions Account (partition column a je koyta unique value ache sei koyta partition toiry hbee)
+
+## query in partitions
+-> hdfs dfs -ls /BankDB/account // show all partitions as files
+-> select * where branch_id=105 // show data from partition branch_id=105
+-> insert into table bankdb.account
+partition (branch_id=5)
+values(2002,500,56456.55),
+(2222,501,56456.55);
+
+## drop a partiion , drop korar por repair korte hote pare nahole data geleo structure a partition dekhabe
+=> alter table account
+drop partition(branch_id=105)
+
+=>msck repair table account // repair 
+
+## create a new partition
+
+
+
+
+// insert manually data to table if sir asks
+insert into BankDB.customer values(11,'Sadnur', 'a@gmail.com')
+
+
+
+## check any directory status in hadpood system
+=> hdfs dfs -ls /bankdb
+
+## to drop any table:
+ drop table account_tmp;
+
+
+## add a partition:
+ALTER TABLE account
+ADD PARTITION (branch_id=6);
+
+
+## show count in each partition:
+ select branch_id, count(*) from transaction group by branch_id;
+
+
+====================================================================================================
+ 2.6  CREATE TABLE Customer.txt
+ F:\ddbms\hive_distributed_query\CREATE TABLE Customer.txt
+ SQL / HiveQL  |  90 lines  |  1.5 KB
+====================================================================================================
+
+CREATE TABLE Customer (
+    customer_id BIGINT,
+    name VARCHAR(100),
+    email VARCHAR(100)
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/BankDB/Customer';
+
+
+
+
+
+CREATE TABLE Account (
+    account_id BIGINT,
+    customer_id BIGINT,
+    balance DECIMAL(12,2)
+)
+PARTITIONED BY (
+    branch_id INT
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/BankDB/Account';
+
+
+CREATE TABLE Account_tmp (
+    account_id BIGINT,
+    customer_id BIGINT,
+    branch_id INT,
+    balance DECIMAL(12,2)
+    
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/BankDB/Account_tmp';
+
+
+
+
+CREATE TABLE Transaction (
+    transaction_id BIGINT,
+    account_id BIGINT,
+    amount DECIMAL(12,2)
+)
+PARTITIONED BY (
+    branch_id INT
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/BankDB/Transaction';
+
+
+CREATE TABLE Transaction_tmp (
+    transaction_id BIGINT,
+    account_id BIGINT,
+    branch_id INT,
+    amount DECIMAL(12,2)
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+LOCATION '/BankDB/Transaction_tmp';
+
+
+
+c) to add new partition:
+ALTER TABLE Account
+ADD PARTITION (branch_id=6);
+
+insert data into a partition:
+
+insert into table bankdb.account
+partition (branch_id=6)
+values(2002,500,56456.55),
+(2222,501,56456.55);
+
+d) drop a partition:
+
+alter table account
+drop partition(branch_id=3)
+
+
+e) show data of each partition:
+
+ select branch_id, count(*) from transactions group by branch_id;
+
+
+####################################################################################################
+#                                   PART 3  -  COMPUTER GRAPHICS                                   #
+#     2D transformations, line drawing, clipping and fractals - static plus animated versions.     #
+#                             14 files  |  1,074 lines  |  F:\graphics                             #
+####################################################################################################
+
+
+====================================================================================================
+ 3.1  01_translation.py
+ F:\graphics\01_translation.py
+ Python  |  42 lines  |  1.3 KB
+====================================================================================================
+
+# ============================================================
+# Lab 01 : Two Dimensional Geometric TRANSLATION  (Python turtle)
+# Run with:  python 01_translation.py
+# ============================================================
+import turtle
+
+def draw_shape(t, points, color, label):
+    """Draws a closed shape through the given list of points"""
+    t.pencolor(color)
+    t.penup()
+    t.goto(points[0])          # go to the first point with the pen up
+    t.pendown()
+    for p in points[1:]:
+        t.goto(p)              # draw a line to the next point
+    t.goto(points[0])          # close the shape
+    t.penup()
+    t.goto(points[0][0], points[0][1] - 20)
+    t.write(label, font=("Arial", 11, "normal"))
+
+# ---- original object (a triangle) ----
+shape = [(-100, 0), (0, 0), (-50, 80)]
+
+tx = int(input("Enter tx : "))     # example: 120
+ty = int(input("Enter ty : "))     # example: 60
+
+# ---- Translation :  x' = x + tx ,  y' = y + ty ----
+new_shape = [(x + tx, y + ty) for (x, y) in shape]
+
+screen = turtle.Screen()
+screen.title("2D Translation")
+t = turtle.Turtle()
+t.speed(3)
+
+draw_shape(t, shape, "black", "Original")
+draw_shape(t, new_shape, "green", "Translated")
+
+print("\nNew vertices :")
+for old, new in zip(shape, new_shape):
+    print(old, " -> ", new)
+
+t.hideturtle()
+screen.exitonclick()               # click the window to close it
+
+
+====================================================================================================
+ 3.2  01_translation_anim.py
+ F:\graphics\01_translation_anim.py
+ Python  |  100 lines  |  3.8 KB
+====================================================================================================
+
+# ============================================================
+# Lab 01 (ANIMATED) : 2D TRANSLATION  -  Python turtle
+# Each edge of the triangle is drawn stroke by stroke, then the
+# object glides smoothly to its new position
+# ============================================================
+import turtle, time, math
+
+# ---------- colour settings (kept in one place, easy to change) ----------
+BG      = "#0f1420"      # background
+ORIG    = "#8d99ae"      # original object
+NEW     = "#51cf66"      # translated object
+ARROW   = "#ffd43b"      # translation vector
+TEXT    = "#e9ecef"
+
+shape = [(-230, -60), (-110, -60), (-170, 40)]     # original triangle
+
+tx = int(input("Enter tx : "))          # example: 260
+ty = int(input("Enter ty : "))          # example: 130
+
+# ---------------- set up the screen ----------------
+screen = turtle.Screen()
+screen.setup(900, 650)
+screen.title("2D Translation - Animated")
+screen.bgcolor(BG)
+screen.tracer(0)                        # we control the frames ourselves
+
+bg   = turtle.Turtle(); bg.hideturtle();   bg.penup()   # static drawing
+mov  = turtle.Turtle(); mov.hideturtle();  mov.penup()  # moving drawing
+info = turtle.Turtle(); info.hideturtle(); info.penup() # text
+
+# ---------- draws a line slowly, from start to end ----------
+def draw_line_anim(t, p1, p2, color, width=3, steps=28, pause=0.010):
+    """The line grows little by little from p1 towards p2"""
+    t.pencolor(color); t.pensize(width)
+    t.penup(); t.goto(p1); t.pendown()
+    x1, y1 = p1; x2, y2 = p2
+    for i in range(1, steps + 1):
+        t.goto(x1 + (x2 - x1) * i / steps,      # move along the line
+               y1 + (y2 - y1) * i / steps)
+        screen.update()                          # show this step
+        time.sleep(pause)
+    t.penup()
+
+def draw_shape_anim(t, pts, color, width=3):
+    """Draws a closed shape one edge at a time"""
+    for i in range(len(pts)):
+        draw_line_anim(t, pts[i], pts[(i + 1) % len(pts)], color, width)
+
+def draw_shape_fast(t, pts, color, width=3):
+    """Draws instantly (used inside every animation frame)"""
+    t.pencolor(color); t.pensize(width)
+    t.penup(); t.goto(pts[0]); t.pendown()
+    for p in pts[1:]:
+        t.goto(p)
+    t.goto(pts[0]); t.penup()
+
+def say(msg, y=250, color=TEXT, size=15):
+    info.clear(); info.pencolor(color)
+    info.goto(-390, y)
+    info.write(msg, font=("Verdana", size, "normal"))
+    screen.update()
+
+# ---------------- step 1 : draw the original object ----------------
+say("Step 1 :  drawing the original object ...")
+draw_shape_anim(bg, shape, ORIG)
+time.sleep(0.6)
+
+# ---------------- step 2 : show the translation vector ----------------
+say(f"Step 2 :  translation vector  ({tx}, {ty})", color=ARROW)
+start = shape[0]
+end   = (shape[0][0] + tx, shape[0][1] + ty)
+draw_line_anim(bg, start, end, ARROW, width=2, steps=30, pause=0.008)
+
+ang = math.atan2(end[1] - start[1], end[0] - start[0])      # arrow head
+for da in (math.radians(150), math.radians(-150)):
+    bg.penup(); bg.goto(end); bg.pendown()
+    bg.goto(end[0] + 16 * math.cos(ang + da), end[1] + 16 * math.sin(ang + da))
+    bg.penup()
+screen.update(); time.sleep(0.6)
+
+# ---------------- step 3 : glide smoothly to the new place ----------------
+FRAMES = 70
+for f in range(FRAMES + 1):
+    mov.clear()                                   # erase the previous frame
+
+    # apply only the fraction f/FRAMES  ->  x' = x + tx*(f/N)
+    cur = [(x + tx * f / FRAMES, y + ty * f / FRAMES) for (x, y) in shape]
+    draw_shape_fast(mov, cur, NEW)
+
+    say(f"Step 3 :  x' = x + {int(tx * f / FRAMES)} ,  "
+        f"y' = y + {int(ty * f / FRAMES)}", color=NEW)
+    time.sleep(0.025)
+
+# ---------------- finished ----------------
+say("Translation complete!   (gray = original , green = translated)", color=NEW)
+info.goto(-390, 220)
+info.pencolor(TEXT)
+info.write("Click the screen to close", font=("Verdana", 11, "normal"))
+screen.update()
+screen.exitonclick()
+
+
+====================================================================================================
+ 3.3  02_rotation.py
+ F:\graphics\02_rotation.py
+ Python  |  44 lines  |  1.4 KB
+====================================================================================================
+
+# ============================================================
+# Lab 02 : Two Dimensional Geometric ROTATION  (Python turtle)
+# Rotation about a pivot point
+# ============================================================
+import turtle, math
+
+def draw_shape(t, points, color):
+    t.pencolor(color)
+    t.penup(); t.goto(points[0]); t.pendown()
+    for p in points[1:]:
+        t.goto(p)
+    t.goto(points[0])
+    t.penup()
+
+def rotate(points, xr, yr, angle_deg):
+    """Rotates the points by angle_deg about the pivot (xr, yr)"""
+    rad = math.radians(angle_deg)          # degree -> radian
+    c, s = math.cos(rad), math.sin(rad)
+    out = []
+    for (x, y) in points:
+        nx = xr + (x - xr) * c - (y - yr) * s
+        ny = yr + (x - xr) * s + (y - yr) * c
+        out.append((nx, ny))
+    return out
+
+shape = [(0, 0), (120, 0), (60, 90)]       # a triangle
+xr = float(input("Enter pivot xr : "))     # example: 0
+yr = float(input("Enter pivot yr : "))     # example: 0
+ang = float(input("Enter angle (degree) : "))   # example: 90
+
+new_shape = rotate(shape, xr, yr, ang)
+
+screen = turtle.Screen(); screen.title("2D Rotation")
+t = turtle.Turtle(); t.speed(3)
+
+draw_shape(t, shape, "black")
+t.goto(xr, yr); t.dot(8, "red")            # the pivot point
+draw_shape(t, new_shape, "blue")
+
+print("\nRotated vertices :")
+for old, new in zip(shape, new_shape):
+    print(old, " -> ", (round(new[0], 2), round(new[1], 2)))
+
+t.hideturtle(); screen.exitonclick()
+
+
+====================================================================================================
+ 3.4  02_rotation_anim.py
+ F:\graphics\02_rotation_anim.py
+ Python  |  97 lines  |  3.4 KB
+====================================================================================================
+
+# ============================================================
+# Lab 02 (ANIMATED) : 2D ROTATION  -  Python turtle
+# The edges are drawn stroke by stroke, then the object turns
+# smoothly about the pivot leaving a faint trail behind
+# ============================================================
+import turtle, time, math
+
+BG    = "#0f1420"
+ORIG  = "#8d99ae"
+NEW   = "#4dabf7"
+GHOST = "#243447"        # faint trail left along the rotation path
+PIVOT = "#ff6b6b"
+TEXT  = "#e9ecef"
+
+shape = [(0, 0), (150, 0), (75, 110)]
+
+xr  = float(input("Enter pivot xr : "))         # example: 0
+yr  = float(input("Enter pivot yr : "))         # example: 0
+ang = float(input("Enter angle (degree) : "))   # example: 270
+
+screen = turtle.Screen()
+screen.setup(900, 650)
+screen.title("2D Rotation - Animated")
+screen.bgcolor(BG); screen.tracer(0)
+
+bg    = turtle.Turtle(); bg.hideturtle();    bg.penup()
+ghost = turtle.Turtle(); ghost.hideturtle(); ghost.penup()
+mov   = turtle.Turtle(); mov.hideturtle();   mov.penup()
+info  = turtle.Turtle(); info.hideturtle();  info.penup()
+
+def draw_line_anim(t, p1, p2, color, width=3, steps=28, pause=0.010):
+    t.pencolor(color); t.pensize(width)
+    t.penup(); t.goto(p1); t.pendown()
+    x1, y1 = p1; x2, y2 = p2
+    for i in range(1, steps + 1):
+        t.goto(x1 + (x2 - x1) * i / steps, y1 + (y2 - y1) * i / steps)
+        screen.update(); time.sleep(pause)
+    t.penup()
+
+def draw_shape_anim(t, pts, color, width=3):
+    for i in range(len(pts)):
+        draw_line_anim(t, pts[i], pts[(i + 1) % len(pts)], color, width)
+
+def draw_shape_fast(t, pts, color, width=3):
+    t.pencolor(color); t.pensize(width)
+    t.penup(); t.goto(pts[0]); t.pendown()
+    for p in pts[1:]:
+        t.goto(p)
+    t.goto(pts[0]); t.penup()
+
+def say(msg, color=TEXT):
+    info.clear(); info.pencolor(color)
+    info.goto(-390, 250)
+    info.write(msg, font=("Verdana", 15, "normal"))
+    screen.update()
+
+def rotate(points, xr, yr, deg):
+    """x' = xr + (x-xr)cos0 - (y-yr)sin0   |   y' = yr + (x-xr)sin0 + (y-yr)cos0"""
+    rad = math.radians(deg)
+    c, s = math.cos(rad), math.sin(rad)
+    return [(xr + (x - xr) * c - (y - yr) * s,
+             yr + (x - xr) * s + (y - yr) * c) for (x, y) in points]
+
+# ---------------- step 1 : the original object ----------------
+say("Step 1 :  drawing the original object ...")
+draw_shape_anim(bg, shape, ORIG)
+
+bg.goto(xr, yr); bg.dot(12, PIVOT)              # the pivot point
+bg.pencolor(PIVOT); bg.goto(xr + 12, yr + 8)
+bg.write("pivot", font=("Verdana", 10, "normal"))
+screen.update(); time.sleep(0.7)
+
+# ---------------- step 2 : the rotation ----------------
+step = 1 if ang > 0 else -1
+a = 0
+while abs(a) <= abs(ang):
+    mov.clear()
+    cur = rotate(shape, xr, yr, a)               # angle for this frame
+
+    if int(a) % 30 == 0 and a != 0:              # leave a trail every 30 degrees
+        draw_shape_fast(ghost, cur, GHOST, width=1)
+
+    draw_shape_fast(mov, cur, NEW)
+
+    mov.pencolor(PIVOT); mov.pensize(1)          # radius line from the pivot
+    mov.goto(xr, yr); mov.pendown(); mov.goto(cur[0]); mov.penup()
+
+    say(f"Step 2 :  rotating -  angle = {int(a)} degree", color=NEW)
+    time.sleep(0.018)
+    a += step
+
+say(f"Rotation complete!   angle = {int(ang)} degree  "
+    f"(gray = original , blue = rotated)", color=NEW)
+info.goto(-390, 220); info.pencolor(TEXT)
+info.write("Click the screen to close", font=("Verdana", 11, "normal"))
+screen.update()
+screen.exitonclick()
+
+
+====================================================================================================
+ 3.5  03_scaling.py
+ F:\graphics\03_scaling.py
+ Python  |  38 lines  |  1.3 KB
+====================================================================================================
+
+# ============================================================
+# Lab 03 : Two Dimensional Geometric SCALING  (Python turtle)
+# Scaling about a fixed point
+# ============================================================
+import turtle
+
+def draw_shape(t, points, color):
+    t.pencolor(color)
+    t.penup(); t.goto(points[0]); t.pendown()
+    for p in points[1:]:
+        t.goto(p)
+    t.goto(points[0])
+    t.penup()
+
+def scale(points, xf, yf, sx, sy):
+    """Scales by sx, sy while keeping the point (xf, yf) fixed"""
+    return [(xf + (x - xf) * sx, yf + (y - yf) * sy) for (x, y) in points]
+
+shape = [(0, 0), (100, 0), (100, 80), (0, 80)]      # a rectangle
+sx = float(input("Enter sx : "))            # example: 1.5
+sy = float(input("Enter sy : "))            # example: 1.5
+xf = float(input("Enter fixed point xf : "))# example: 0
+yf = float(input("Enter fixed point yf : "))# example: 0
+
+new_shape = scale(shape, xf, yf, sx, sy)
+
+screen = turtle.Screen(); screen.title("2D Scaling")
+t = turtle.Turtle(); t.speed(3)
+
+draw_shape(t, shape, "black")
+t.goto(xf, yf); t.dot(8, "red")             # the fixed point
+draw_shape(t, new_shape, "purple")
+
+print("\nScaled vertices :")
+for old, new in zip(shape, new_shape):
+    print(old, " -> ", (round(new[0], 2), round(new[1], 2)))
+
+t.hideturtle(); screen.exitonclick()
+
+
+====================================================================================================
+ 3.6  03_scaling_anim.py
+ F:\graphics\03_scaling_anim.py
+ Python  |  93 lines  |  3.3 KB
+====================================================================================================
+
+# ============================================================
+# Lab 03 (ANIMATED) : 2D SCALING  -  Python turtle
+# Rays are drawn from the fixed point through every corner, then
+# the object grows or shrinks smoothly along those rays
+# ============================================================
+import turtle, time
+
+BG    = "#0f1420"
+ORIG  = "#8d99ae"
+NEW   = "#b197fc"
+RAY   = "#2b3a55"        # rays going out from the fixed point
+FIXED = "#ff6b6b"
+TEXT  = "#e9ecef"
+
+shape = [(-40, -60), (110, -60), (110, 50), (-40, 50)]     # a rectangle
+
+sx = float(input("Enter sx : "))                 # example: 1.8
+sy = float(input("Enter sy : "))                 # example: 1.8
+xf = float(input("Enter fixed point xf : "))     # example: -40
+yf = float(input("Enter fixed point yf : "))     # example: -60
+
+screen = turtle.Screen()
+screen.setup(900, 650)
+screen.title("2D Scaling - Animated")
+screen.bgcolor(BG); screen.tracer(0)
+
+bg   = turtle.Turtle(); bg.hideturtle();   bg.penup()
+mov  = turtle.Turtle(); mov.hideturtle();  mov.penup()
+info = turtle.Turtle(); info.hideturtle(); info.penup()
+
+def draw_line_anim(t, p1, p2, color, width=3, steps=26, pause=0.010):
+    t.pencolor(color); t.pensize(width)
+    t.penup(); t.goto(p1); t.pendown()
+    x1, y1 = p1; x2, y2 = p2
+    for i in range(1, steps + 1):
+        t.goto(x1 + (x2 - x1) * i / steps, y1 + (y2 - y1) * i / steps)
+        screen.update(); time.sleep(pause)
+    t.penup()
+
+def draw_shape_anim(t, pts, color, width=3):
+    for i in range(len(pts)):
+        draw_line_anim(t, pts[i], pts[(i + 1) % len(pts)], color, width)
+
+def draw_shape_fast(t, pts, color, width=3):
+    t.pencolor(color); t.pensize(width)
+    t.penup(); t.goto(pts[0]); t.pendown()
+    for p in pts[1:]:
+        t.goto(p)
+    t.goto(pts[0]); t.penup()
+
+def say(msg, color=TEXT):
+    info.clear(); info.pencolor(color)
+    info.goto(-390, 250)
+    info.write(msg, font=("Verdana", 15, "normal"))
+    screen.update()
+
+# ---------------- step 1 : the original object ----------------
+say("Step 1 :  drawing the original object ...")
+draw_shape_anim(bg, shape, ORIG)
+
+bg.goto(xf, yf); bg.dot(12, FIXED)               # the fixed point
+bg.pencolor(FIXED); bg.goto(xf + 12, yf - 22)
+bg.write("fixed point", font=("Verdana", 10, "normal"))
+screen.update(); time.sleep(0.6)
+
+# ---------------- step 2 : the scaling rays ----------------
+say("Step 2 :  rays from the fixed point through every corner", color=RAY)
+for (x, y) in shape:                             # corners travel along these
+    far = (xf + (x - xf) * max(sx, sy) * 1.15,
+           yf + (y - yf) * max(sx, sy) * 1.15)
+    draw_line_anim(bg, (xf, yf), far, RAY, width=1, steps=18, pause=0.006)
+
+# ---------------- step 3 : smooth scaling ----------------
+FRAMES = 70
+for f in range(FRAMES + 1):
+    mov.clear()
+
+    t_ratio = f / FRAMES                         # 0 -> 1
+    fx = 1 + (sx - 1) * t_ratio                  # scale factor starts at 1
+    fy = 1 + (sy - 1) * t_ratio
+
+    cur = [(xf + (x - xf) * fx, yf + (y - yf) * fy) for (x, y) in shape]
+    draw_shape_fast(mov, cur, NEW)
+
+    say(f"Step 3 :  sx = {fx:.2f} ,  sy = {fy:.2f}", color=NEW)
+    time.sleep(0.025)
+
+say(f"Scaling complete!   sx = {sx} , sy = {sy}   "
+    f"(the red dot never moved)", color=NEW)
+info.goto(-390, 220); info.pencolor(TEXT)
+info.write("Click the screen to close", font=("Verdana", 11, "normal"))
+screen.update()
+screen.exitonclick()
+
+
+====================================================================================================
+ 3.7  04_bresenham.py
+ F:\graphics\04_bresenham.py
+ Python  |  60 lines  |  2.0 KB
+====================================================================================================
+
+# ============================================================
+# Lab 04 : BRESENHAM's Line Drawing Algorithm  (Python turtle)
+# Integer arithmetic only; each pixel is drawn as a small dot
+# ============================================================
+import turtle
+
+def bresenham(x1, y1, x2, y2):
+    """Returns the list of pixels chosen by the algorithm"""
+    points = []
+    dx = abs(x2 - x1)
+    dy = abs(y2 - y1)
+    sx = 1 if x2 > x1 else -1          # direction of x movement
+    sy = 1 if y2 > y1 else -1          # direction of y movement
+    x, y = x1, y1
+    points.append((x, y))
+
+    if dx > dy:                        # |m| < 1 -> step along x
+        p = 2 * dy - dx                # p0 = 2dy - dx
+        for _ in range(dx):
+            x += sx
+            if p < 0:
+                p += 2 * dy            # y stays the same
+            else:
+                y += sy                # y increases by one
+                p += 2 * dy - 2 * dx
+            points.append((x, y))
+    else:                              # |m| > 1 -> step along y
+        p = 2 * dx - dy
+        for _ in range(dy):
+            y += sy
+            if p < 0:
+                p += 2 * dx
+            else:
+                x += sx
+                p += 2 * dx - 2 * dy
+            points.append((x, y))
+    return points
+
+x1 = int(input("Enter x1 : "));  y1 = int(input("Enter y1 : "))   # example: 20 10
+x2 = int(input("Enter x2 : "));  y2 = int(input("Enter y2 : "))   # example: 30 18
+
+pts = bresenham(x1, y1, x2, y2)
+print("\nSelected pixels :")
+for p in pts:
+    print(p)
+
+# ---- show the result with turtle (scaled up so it is visible) ----
+SCALE = 15
+screen = turtle.Screen(); screen.title("Bresenham Line Algorithm")
+t = turtle.Turtle(); t.speed(0); t.hideturtle(); t.penup()
+
+for (px, py) in pts:
+    t.goto(px * SCALE - 300, py * SCALE - 200)
+    t.dot(10, "blue")                  # each selected pixel
+
+# the true mathematical line in red, for comparison
+t.pencolor("red"); t.goto(x1 * SCALE - 300, y1 * SCALE - 200)
+t.pendown(); t.goto(x2 * SCALE - 300, y2 * SCALE - 200)
+
+screen.exitonclick()
+
+
+====================================================================================================
+ 3.8  04_bresenham_anim.py
+ F:\graphics\04_bresenham_anim.py
+ Python  |  119 lines  |  4.4 KB
+====================================================================================================
+
+# ============================================================
+# Lab 04 (ANIMATED) : BRESENHAM Line Drawing  -  Python turtle
+# First the true line is drawn from start to end, then the
+# algorithm builds that same line by lighting up pixel cells
+# ============================================================
+import turtle, time
+
+BG     = "#0f1420"
+GRID   = "#232b3d"
+IDEAL  = "#ff6b6b"        # the true mathematical line
+PIXEL  = "#4dabf7"        # a selected pixel
+TEXT   = "#e9ecef"
+ACCENT = "#ffd43b"
+
+CELL = 34                 # size of one pixel cell on screen
+COLS, ROWS = 15, 11       # size of the grid
+OX, OY = -330, -230       # where the grid starts
+
+def S(gx, gy):            # grid coordinates -> screen coordinates
+    return (OX + gx * CELL, OY + gy * CELL)
+
+x1 = int(input(f"Enter x1 (0-{COLS}, e.g. 1) : ")); y1 = int(input(f"Enter y1 (0-{ROWS}, e.g. 1) : "))
+x2 = int(input(f"Enter x2 (0-{COLS}, e.g. 13) : ")); y2 = int(input(f"Enter y2 (0-{ROWS}, e.g. 8) : "))
+
+screen = turtle.Screen()
+screen.setup(950, 700)
+screen.title("Bresenham's Line Drawing - Animated")
+screen.bgcolor(BG); screen.tracer(0)
+
+grid = turtle.Turtle(); grid.hideturtle(); grid.penup()
+line = turtle.Turtle(); line.hideturtle(); line.penup()
+pen  = turtle.Turtle(); pen.hideturtle(); pen.penup()
+info = turtle.Turtle(); info.hideturtle(); info.penup()
+
+pen.shape("square")                       # show pixels as filled cells
+pen.shapesize(CELL / 20 * 0.82, CELL / 20 * 0.82)
+pen.color(PIXEL)
+
+def say(line1, line2="", c1=TEXT, c2=ACCENT):
+    info.clear()
+    info.pencolor(c1); info.goto(-420, 290)
+    info.write(line1, font=("Verdana", 14, "normal"))
+    if line2:
+        info.pencolor(c2); info.goto(-420, 262)
+        info.write(line2, font=("Consolas", 13, "bold"))
+    screen.update()
+
+# ---------------- step 1 : draw the grid ----------------
+grid.pencolor(GRID); grid.pensize(1)
+for i in range(COLS + 1):
+    grid.goto(S(i, 0)); grid.pendown(); grid.goto(S(i, ROWS)); grid.penup()
+for j in range(ROWS + 1):
+    grid.goto(S(0, j)); grid.pendown(); grid.goto(S(COLS, j)); grid.penup()
+say("Step 1 :  pixel grid ready")
+screen.update(); time.sleep(0.8)
+
+# ---------------- step 2 : draw the true line, start to end ----------------
+say("Step 2 :  drawing the true mathematical line ...",
+    f"({x1}, {y1})  ->  ({x2}, {y2})", c2=IDEAL)
+
+p1, p2 = S(x1, y1), S(x2, y2)
+line.pencolor(IDEAL); line.pensize(3)
+line.goto(p1); line.pendown()
+STEPS = 60
+for i in range(1, STEPS + 1):                  # the line grows little by little
+    line.goto(p1[0] + (p2[0] - p1[0]) * i / STEPS,
+              p1[1] + (p2[1] - p1[1]) * i / STEPS)
+    screen.update(); time.sleep(0.015)
+line.penup()
+time.sleep(0.7)
+
+# ---------------- step 3 : Bresenham, one pixel at a time ----------------
+dx, dy = abs(x2 - x1), abs(y2 - y1)
+sx = 1 if x2 > x1 else -1
+sy = 1 if y2 > y1 else -1
+x, y = x1, y1
+
+pen.goto(S(x, y)); pen.stamp()                 # the starting pixel
+say("Step 3 :  Bresenham starts", f"p0 = 2dy - dx = {2*dy} - {dx} = {2*dy-dx}")
+time.sleep(1.0)
+
+if dx > dy:                                    # |m| < 1  ->  step along x
+    p = 2 * dy - dx
+    for k in range(dx):
+        decision = "p < 0  ->  y stays the same" if p < 0 else "p >= 0  ->  y increases by 1"
+        say(f"step {k+1} / {dx}    current pixel ({x}, {y})",
+            f"p = {p}      {decision}")
+        time.sleep(0.55)
+
+        x += sx                                # x always increases by one
+        if p < 0:
+            p += 2 * dy                        # y unchanged
+        else:
+            y += sy                            # y increases by one
+            p += 2 * dy - 2 * dx
+
+        pen.goto(S(x, y)); pen.stamp()         # the new pixel lights up
+        screen.update(); time.sleep(0.3)
+else:                                          # |m| > 1  ->  step along y
+    p = 2 * dx - dy
+    for k in range(dy):
+        decision = "p < 0  ->  x stays the same" if p < 0 else "p >= 0  ->  x increases by 1"
+        say(f"step {k+1} / {dy}    current pixel ({x}, {y})",
+            f"p = {p}      {decision}")
+        time.sleep(0.55)
+
+        y += sy
+        if p < 0:
+            p += 2 * dx
+        else:
+            x += sx
+            p += 2 * dx - 2 * dy
+
+        pen.goto(S(x, y)); pen.stamp()
+        screen.update(); time.sleep(0.3)
+
+say("Line complete!   the blue cells are the pixels that light up",
+    "notice - every pixel sits in the cell closest to the red line")
+screen.exitonclick()
+
+
+====================================================================================================
+ 3.9  05_dda.py
+ F:\graphics\05_dda.py
+ Python  |  43 lines  |  1.3 KB
+====================================================================================================
+
+# ============================================================
+# Lab 05 : DDA Line Drawing Algorithm  (Python turtle)
+# Uses floating point increments
+# ============================================================
+import turtle
+
+def dda(x1, y1, x2, y2):
+    points = []
+    dx = x2 - x1
+    dy = y2 - y1
+    steps = max(abs(dx), abs(dy))      # as many steps as the larger distance
+
+    x_inc = dx / steps                 # increment of x per step
+    y_inc = dy / steps                 # increment of y per step
+
+    x, y = float(x1), float(y1)
+    points.append((round(x), round(y)))
+    for _ in range(steps):
+        x += x_inc
+        y += y_inc
+        points.append((round(x), round(y)))   # round to the nearest pixel
+    return points
+
+x1 = int(input("Enter x1 : "));  y1 = int(input("Enter y1 : "))   # example: 5 5
+x2 = int(input("Enter x2 : "));  y2 = int(input("Enter y2 : "))   # example: 25 18
+
+pts = dda(x1, y1, x2, y2)
+print("\nSelected pixels :")
+for p in pts:
+    print(p)
+
+SCALE = 15
+screen = turtle.Screen(); screen.title("DDA Line Algorithm")
+t = turtle.Turtle(); t.speed(0); t.hideturtle(); t.penup()
+
+for (px, py) in pts:
+    t.goto(px * SCALE - 300, py * SCALE - 200)
+    t.dot(10, "green")
+
+t.pencolor("red"); t.goto(x1 * SCALE - 300, y1 * SCALE - 200)
+t.pendown(); t.goto(x2 * SCALE - 300, y2 * SCALE - 200)
+
+screen.exitonclick()
+
+
+====================================================================================================
+ 3.10  05_dda_anim.py
+ F:\graphics\05_dda_anim.py
+ Python  |  103 lines  |  3.4 KB
+====================================================================================================
+
+# ============================================================
+# Lab 05 (ANIMATED) : DDA Line Drawing  -  Python turtle
+# After the true line is drawn, every step shows the fractional
+# x, y values next to the rounded pixel position
+# ============================================================
+import turtle, time
+
+BG     = "#0f1420"
+GRID   = "#232b3d"
+IDEAL  = "#ff6b6b"
+PIXEL  = "#51cf66"
+TEXT   = "#e9ecef"
+ACCENT = "#ffd43b"
+
+CELL = 34
+COLS, ROWS = 15, 11
+OX, OY = -330, -230
+
+def S(gx, gy):
+    return (OX + gx * CELL, OY + gy * CELL)
+
+x1 = int(input(f"Enter x1 (0-{COLS}, e.g. 1) : ")); y1 = int(input(f"Enter y1 (0-{ROWS}, e.g. 1) : "))
+x2 = int(input(f"Enter x2 (0-{COLS}, e.g. 14) : ")); y2 = int(input(f"Enter y2 (0-{ROWS}, e.g. 8) : "))
+
+screen = turtle.Screen()
+screen.setup(950, 700)
+screen.title("DDA Line Drawing - Animated")
+screen.bgcolor(BG); screen.tracer(0)
+
+grid = turtle.Turtle(); grid.hideturtle(); grid.penup()
+line = turtle.Turtle(); line.hideturtle(); line.penup()
+pen  = turtle.Turtle(); pen.hideturtle(); pen.penup()
+dot  = turtle.Turtle(); dot.hideturtle(); dot.penup()   # shows the exact position
+info = turtle.Turtle(); info.hideturtle(); info.penup()
+
+pen.shape("square")
+pen.shapesize(CELL / 20 * 0.82, CELL / 20 * 0.82)
+pen.color(PIXEL)
+
+def say(line1, line2="", c1=TEXT, c2=ACCENT):
+    info.clear()
+    info.pencolor(c1); info.goto(-420, 290)
+    info.write(line1, font=("Verdana", 14, "normal"))
+    if line2:
+        info.pencolor(c2); info.goto(-420, 262)
+        info.write(line2, font=("Consolas", 13, "bold"))
+    screen.update()
+
+# ---------------- step 1 : the grid ----------------
+grid.pencolor(GRID); grid.pensize(1)
+for i in range(COLS + 1):
+    grid.goto(S(i, 0)); grid.pendown(); grid.goto(S(i, ROWS)); grid.penup()
+for j in range(ROWS + 1):
+    grid.goto(S(0, j)); grid.pendown(); grid.goto(S(COLS, j)); grid.penup()
+say("Step 1 :  pixel grid ready")
+screen.update(); time.sleep(0.8)
+
+# ---------------- step 2 : draw the true line ----------------
+say("Step 2 :  drawing the true mathematical line ...",
+    f"({x1}, {y1})  ->  ({x2}, {y2})", c2=IDEAL)
+
+p1, p2 = S(x1, y1), S(x2, y2)
+line.pencolor(IDEAL); line.pensize(3)
+line.goto(p1); line.pendown()
+STEPS = 60
+for i in range(1, STEPS + 1):
+    line.goto(p1[0] + (p2[0] - p1[0]) * i / STEPS,
+              p1[1] + (p2[1] - p1[1]) * i / STEPS)
+    screen.update(); time.sleep(0.015)
+line.penup()
+time.sleep(0.7)
+
+# ---------------- step 3 : DDA ----------------
+dx, dy = x2 - x1, y2 - y1
+steps = max(abs(dx), abs(dy))
+x_inc, y_inc = dx / steps, dy / steps
+
+say("Step 3 :  DDA starts",
+    f"steps = max(|dx|,|dy|) = {steps}    x_inc = {x_inc:.2f}   y_inc = {y_inc:.2f}")
+time.sleep(1.2)
+
+x, y = float(x1), float(y1)
+pen.goto(S(round(x), round(y))); pen.stamp()
+screen.update(); time.sleep(0.4)
+
+for k in range(steps):
+    x += x_inc
+    y += y_inc
+
+    dot.clear()                                # exact position (yellow dot)
+    dot.goto(S(x, y)); dot.dot(10, ACCENT)
+
+    say(f"step {k+1} / {steps}",
+        f"x = {x:6.2f} , y = {y:6.2f}   ->  round  ->  pixel ({round(x)}, {round(y)})")
+    screen.update(); time.sleep(0.5)
+
+    pen.goto(S(round(x), round(y))); pen.stamp()   # the rounded cell lights up
+    screen.update(); time.sleep(0.3)
+
+dot.clear()
+say("Line complete!   yellow dot = exact position, green cell = rounded pixel",
+    "this rounding is the weakness of DDA - error can build up on long lines")
+screen.exitonclick()
+
+
+====================================================================================================
+ 3.11  06_cohen_sutherland.py
+ F:\graphics\06_cohen_sutherland.py
+ Python  |  70 lines  |  2.8 KB
+====================================================================================================
+
+# ============================================================
+# Lab 06 : COHEN-SUTHERLAND Line Clipping  (Python turtle)
+# region code: bit1 Left, bit2 Right, bit3 Below, bit4 Above
+# ============================================================
+import turtle
+
+LEFT, RIGHT, BOTTOM, TOP = 1, 2, 4, 8
+
+# boundaries of the clipping window
+xmin, ymin, xmax, ymax = -150, -100, 150, 100
+
+def region_code(x, y):
+    """Which region of the window the point falls in - a 4-bit code"""
+    code = 0
+    if x < xmin: code |= LEFT
+    if x > xmax: code |= RIGHT
+    if y < ymin: code |= BOTTOM
+    if y > ymax: code |= TOP
+    return code
+
+def cohen_sutherland(x1, y1, x2, y2):
+    code1 = region_code(x1, y1)
+    code2 = region_code(x2, y2)
+
+    while True:
+        if code1 == 0 and code2 == 0:          # 1. both endpoints inside
+            return (x1, y1, x2, y2)            #    -> keep the whole line
+        elif code1 & code2:                    # 2. AND != 0 -> same side
+            return None                        #    -> discard the whole line
+        else:                                  # 3. partly inside -> clip
+            code_out = code1 if code1 else code2
+
+            if code_out & TOP:                 # top boundary y = ymax
+                x = x1 + (x2 - x1) * (ymax - y1) / (y2 - y1); y = ymax
+            elif code_out & BOTTOM:            # bottom boundary y = ymin
+                x = x1 + (x2 - x1) * (ymin - y1) / (y2 - y1); y = ymin
+            elif code_out & RIGHT:             # right boundary x = xmax
+                y = y1 + (y2 - y1) * (xmax - x1) / (x2 - x1); x = xmax
+            else:                              # left boundary x = xmin
+                y = y1 + (y2 - y1) * (xmin - x1) / (x2 - x1); x = xmin
+
+            if code_out == code1:              # replace the outside endpoint
+                x1, y1 = x, y; code1 = region_code(x1, y1)
+            else:
+                x2, y2 = x, y; code2 = region_code(x2, y2)
+
+x1 = float(input("Enter x1 : ")); y1 = float(input("Enter y1 : "))  # example: -250 -150
+x2 = float(input("Enter x2 : ")); y2 = float(input("Enter y2 : "))  # example: 250 160
+
+result = cohen_sutherland(x1, y1, x2, y2)
+print("Clipped line :", result if result else "Line fully rejected")
+
+screen = turtle.Screen(); screen.title("Cohen-Sutherland Line Clipping")
+t = turtle.Turtle(); t.speed(2); t.hideturtle()
+
+# ---- draw the clipping window ----
+t.penup(); t.goto(xmin, ymin); t.pendown(); t.pencolor("black")
+for p in [(xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]:
+    t.goto(p)
+
+# ---- the original line (red) ----
+t.penup(); t.goto(x1, y1); t.pencolor("red"); t.pendown(); t.goto(x2, y2)
+
+# ---- the clipped part (thick green) ----
+if result:
+    cx1, cy1, cx2, cy2 = result
+    t.penup(); t.goto(cx1, cy1); t.pencolor("green"); t.pensize(4)
+    t.pendown(); t.goto(cx2, cy2)
+
+screen.exitonclick()
+
+
+====================================================================================================
+ 3.12  06_cohen_sutherland_anim.py
+ F:\graphics\06_cohen_sutherland_anim.py
+ Python  |  164 lines  |  6.3 KB
+====================================================================================================
+
+# ============================================================
+# Lab 06 (ANIMATED) : COHEN-SUTHERLAND Clipping  -  Python turtle
+# window is drawn -> the line is drawn from start to end ->
+# each step shows the region codes, the intersection point and
+# the outside part being cut away
+# ============================================================
+import turtle, time
+
+BG     = "#0f1420"
+WIN    = "#8d99ae"        # clipping window
+OUT    = "#ff6b6b"        # the outside (discarded) part
+IN     = "#51cf66"        # the inside (surviving) part
+MARK   = "#ffd43b"        # intersection point
+TEXT   = "#e9ecef"
+
+LEFT, RIGHT, BOTTOM, TOP = 1, 2, 4, 8
+xmin, ymin, xmax, ymax = -170, -110, 170, 110
+
+def region_code(x, y):
+    code = 0
+    if x < xmin: code |= LEFT
+    if x > xmax: code |= RIGHT
+    if y < ymin: code |= BOTTOM
+    if y > ymax: code |= TOP
+    return code
+
+def code_str(c):          # written as "1010" (Above Below Right Left)
+    return f"{1 if c&TOP else 0}{1 if c&BOTTOM else 0}{1 if c&RIGHT else 0}{1 if c&LEFT else 0}"
+
+x1 = float(input("Enter x1 (e.g. -320) : ")); y1 = float(input("Enter y1 (e.g. -190) : "))
+x2 = float(input("Enter x2 (e.g.  300) : ")); y2 = float(input("Enter y2 (e.g.  200) : "))
+
+screen = turtle.Screen()
+screen.setup(950, 700)
+screen.title("Cohen-Sutherland Line Clipping - Animated")
+screen.bgcolor(BG); screen.tracer(0)
+
+bg   = turtle.Turtle(); bg.hideturtle();   bg.penup()
+seg  = turtle.Turtle(); seg.hideturtle();  seg.penup()
+mark = turtle.Turtle(); mark.hideturtle(); mark.penup()
+lbl  = turtle.Turtle(); lbl.hideturtle();  lbl.penup()
+info = turtle.Turtle(); info.hideturtle(); info.penup()
+
+def draw_line_anim(t, p1, p2, color, width=3, steps=45, pause=0.012):
+    """The line is drawn gradually from start to end"""
+    t.pencolor(color); t.pensize(width)
+    t.penup(); t.goto(p1); t.pendown()
+    for i in range(1, steps + 1):
+        t.goto(p1[0] + (p2[0]-p1[0]) * i / steps, p1[1] + (p2[1]-p1[1]) * i / steps)
+        screen.update(); time.sleep(pause)
+    t.penup()
+
+def draw_fast(t, p1, p2, color, width=3):
+    t.clear(); t.pencolor(color); t.pensize(width)
+    t.penup(); t.goto(p1); t.pendown(); t.goto(p2); t.penup()
+
+def say(l1, l2="", c1=TEXT, c2=MARK):
+    info.clear()
+    info.pencolor(c1); info.goto(-430, 290)
+    info.write(l1, font=("Verdana", 14, "normal"))
+    if l2:
+        info.pencolor(c2); info.goto(-430, 262)
+        info.write(l2, font=("Consolas", 13, "bold"))
+    screen.update()
+
+def show_codes(ax, ay, bx, by):
+    """Writes the region code next to each endpoint"""
+    lbl.clear(); lbl.pencolor(MARK)
+    lbl.goto(ax + 10, ay - 25); lbl.write(code_str(region_code(ax, ay)),
+                                          font=("Consolas", 12, "bold"))
+    lbl.goto(bx + 10, by + 10);  lbl.write(code_str(region_code(bx, by)),
+                                          font=("Consolas", 12, "bold"))
+    screen.update()
+
+# ---------------- step 1 : the window ----------------
+say("Step 1 :  drawing the clipping window ...")
+corners = [(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)]
+for i in range(4):
+    draw_line_anim(bg, corners[i], corners[(i+1) % 4], WIN, 2, 22, 0.008)
+time.sleep(0.5)
+
+# ---------------- step 2 : draw the original line ----------------
+say("Step 2 :  drawing the line ...", f"({x1:.0f}, {y1:.0f})  ->  ({x2:.0f}, {y2:.0f})", c2=OUT)
+draw_line_anim(seg, (x1, y1), (x2, y2), OUT)
+show_codes(x1, y1, x2, y2)
+time.sleep(1.0)
+
+# ---------------- step 3 : the clipping ----------------
+code1, code2 = region_code(x1, y1), region_code(x2, y2)
+accept = False
+step = 0
+
+while True:
+    step += 1
+    say(f"Step 3.{step} :  checking the region codes",
+        f"code1 = {code_str(code1)}    code2 = {code_str(code2)}    "
+        f"AND = {code_str(code1 & code2)}")
+    time.sleep(1.5)
+
+    if code1 == 0 and code2 == 0:                # 1. both endpoints inside
+        accept = True
+        say("both codes are 0000  ->  TRIVIALLY ACCEPT",
+            "the whole line lies inside the window", c1=IN)
+        time.sleep(1.5); break
+
+    elif code1 & code2:                          # 2. AND != 0 -> discard
+        say("AND != 0000  ->  TRIVIALLY REJECT",
+            "both endpoints are on the same side of the window", c1=OUT)
+        time.sleep(1.5); break
+
+    else:                                        # 3. find the intersection
+        code_out = code1 if code1 else code2
+        side = ("TOP" if code_out & TOP else "BOTTOM" if code_out & BOTTOM
+                else "RIGHT" if code_out & RIGHT else "LEFT")
+
+        if code_out & TOP:
+            x = x1 + (x2-x1) * (ymax-y1) / (y2-y1); y = ymax
+        elif code_out & BOTTOM:
+            x = x1 + (x2-x1) * (ymin-y1) / (y2-y1); y = ymin
+        elif code_out & RIGHT:
+            y = y1 + (y2-y1) * (xmax-x1) / (x2-x1); x = xmax
+        else:
+            y = y1 + (y2-y1) * (xmin-x1) / (x2-x1); x = xmin
+
+        say(f"intersection found with the {side} boundary",
+            f"intersection = ({x:.1f}, {y:.1f})")
+        mark.goto(x, y); mark.dot(14, MARK)       # mark the intersection
+        screen.update(); time.sleep(1.5)
+
+        # ---- slide the outside endpoint down to the intersection ----
+        if code_out == code1:
+            ox, oy = x1, y1
+            FR = 30
+            for i in range(1, FR + 1):            # the endpoint moves in slowly
+                cx = ox + (x - ox) * i / FR
+                cy = oy + (y - oy) * i / FR
+                draw_fast(seg, (cx, cy), (x2, y2), OUT)
+                screen.update(); time.sleep(0.02)
+            x1, y1 = x, y; code1 = region_code(x1, y1)
+        else:
+            ox, oy = x2, y2
+            FR = 30
+            for i in range(1, FR + 1):
+                cx = ox + (x - ox) * i / FR
+                cy = oy + (y - oy) * i / FR
+                draw_fast(seg, (x1, y1), (cx, cy), OUT)
+                screen.update(); time.sleep(0.02)
+            x2, y2 = x, y; code2 = region_code(x2, y2)
+
+        show_codes(x1, y1, x2, y2)
+        time.sleep(0.8)
+
+# ---------------- the result ----------------
+lbl.clear(); mark.clear()
+if accept:
+    seg.clear()
+    draw_line_anim(seg, (x1, y1), (x2, y2), IN, width=6, steps=40, pause=0.012)
+    say("Result :  ACCEPTED - only the green part stays on screen",
+        f"clipped line = ({x1:.1f}, {y1:.1f})  to  ({x2:.1f}, {y2:.1f})", c1=IN, c2=IN)
+else:
+    seg.clear(); screen.update()
+    say("Result :  REJECTED - the whole line is discarded", "", c1=OUT)
+
+screen.exitonclick()
+
+
+====================================================================================================
+ 3.13  07_koch_curve.py
+ F:\graphics\07_koch_curve.py
+ Python  |  35 lines  |  1.5 KB
+====================================================================================================
+
+# ============================================================
+# Lab 07 : Deterministic Self-Similar Fractal - KOCH CURVE
+#          (Python turtle - very simple with recursion)
+# ============================================================
+import turtle
+
+def koch(t, length, depth):
+    """Draws one side; depth = how many times the generator is applied"""
+    if depth == 0:
+        t.forward(length)              # base case: a straight line
+        return
+    length /= 3                        # each part is one third of the previous
+    koch(t, length, depth - 1)         # 1st part
+    t.left(60)                         # left slope of the bump
+    koch(t, length, depth - 1)         # 2nd part
+    t.right(120)                       # over the peak, then the right slope
+    koch(t, length, depth - 1)         # 3rd part
+    t.left(60)                         # back to the original direction
+    koch(t, length, depth - 1)         # 4th part
+
+depth = int(input("Enter iteration depth (0-4) : "))   # example: 3
+
+screen = turtle.Screen(); screen.title("Koch Snowflake")
+t = turtle.Turtle(); t.speed(0); t.pencolor("blue")
+
+# starting position so the figure sits in the middle of the screen
+t.penup(); t.goto(-150, -80); t.pendown()
+
+# Koch snowflake = Koch curve on all three sides of a triangle
+for _ in range(3):
+    koch(t, 300, depth)
+    t.right(120)                       # turn for the next side
+
+print("Total segments per side =", 4 ** depth)
+t.hideturtle(); screen.exitonclick()
+
+
+====================================================================================================
+ 3.14  07_koch_curve_anim.py
+ F:\graphics\07_koch_curve_anim.py
+ Python  |  66 lines  |  2.5 KB
+====================================================================================================
+
+# ============================================================
+# Lab 07 (ANIMATED) : KOCH SNOWFLAKE  -  Python turtle
+# The turtle walks along and draws the curve; every depth is
+# built on top of the previous one, step by step
+# ============================================================
+import turtle, time
+
+BG     = "#0f1420"
+TEXT   = "#e9ecef"
+# a different colour for each depth, so the current step is obvious
+COLORS = ["#8d99ae", "#4dabf7", "#51cf66", "#ffd43b", "#ff6b6b"]
+
+def koch(t, length, depth):
+    """Draws one side; depth = how many times the generator is applied"""
+    if depth == 0:
+        t.forward(length)                  # base case : a straight line
+        return
+    length /= 3                            # each part is one third of the previous
+    koch(t, length, depth - 1)             # 1st part
+    t.left(60)                             # left slope of the bump
+    koch(t, length, depth - 1)             # 2nd part
+    t.right(120)                           # over the peak, then the right slope
+    koch(t, length, depth - 1)             # 3rd part
+    t.left(60)                             # back to the original direction
+    koch(t, length, depth - 1)             # 4th part
+
+max_depth = int(input("Enter maximum depth (0-4) : "))     # example: 4
+
+screen = turtle.Screen()
+screen.setup(950, 700)
+screen.title("Koch Snowflake - Animated")
+screen.bgcolor(BG)
+
+t    = turtle.Turtle()
+info = turtle.Turtle(); info.hideturtle(); info.penup()
+
+def say(l1, l2=""):
+    info.clear()
+    info.pencolor(TEXT); info.goto(-430, 290)
+    info.write(l1, font=("Verdana", 14, "normal"))
+    if l2:
+        info.goto(-430, 264)
+        info.write(l2, font=("Consolas", 12, "normal"))
+
+for d in range(max_depth + 1):
+    t.reset()                              # clear the previous depth
+    t.hideturtle()
+    t.pencolor(COLORS[min(d, len(COLORS) - 1)])
+    t.pensize(3 if d <= 2 else 2)
+
+    # slow for small depths (every bump is visible), fast for large ones
+    t.speed(1 if d == 0 else 2 if d == 1 else 4 if d == 2 else 0)
+
+    say(f"Iteration depth = {d}",
+        f"segments per side = 4^{d} = {4 ** d}    total = {3 * 4 ** d}")
+
+    t.penup(); t.goto(-170, -110); t.setheading(0); t.pendown()
+    for _ in range(3):                     # snowflake = three sides
+        koch(t, 340, d)
+        t.right(120)                       # turn for the next side
+
+    time.sleep(1.4)                        # pause before the next depth
+
+say("Koch Snowflake complete!",
+    "fractal dimension  D = ln4/ln3 = 1.26 approx.     (click to close)")
+screen.exitonclick()
+
+
+####################################################################################################
+#                                   PART 4  -  MACHINE LEARNING                                    #
+#               Supervised and unsupervised model suites over the Dry Bean dataset.                #
+#                                 2 files  |  381 lines  |  F:\ML                                  #
+####################################################################################################
+
+
+====================================================================================================
+ 4.1  supervised_all.py
+ F:\ML\supervised_all.py
+ Python  |  198 lines  |  7.3 KB
+====================================================================================================
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.decomposition import PCA
+from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
+from sklearn.metrics import f1_score, precision_score, recall_score
+from sklearn.metrics import ConfusionMatrixDisplay
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import GaussianNB
+
+##################### 1. Load data #####################
+df = pd.read_csv("Dry_Bean.csv")
+print(df.head())
+print("Shape:", df.shape)
+print(df.info())
+print(df.describe())
+
+##################### 2. Find null and duplicate values #####################
+print("Null values:\n", df.isnull().sum())
+print("Total null:", df.isnull().sum().sum())
+print("Duplicate rows:", df.duplicated().sum())
+
+##################### 3. Remove null and duplicate values #####################
+df = df.dropna()
+df = df.drop_duplicates()
+print("After cleaning:", df.shape)
+
+##################### 4. Label Encoder #####################
+le = LabelEncoder()
+for col in df.select_dtypes(exclude="number").columns:   # sob pandas version e kaj kore
+    df[col] = le.fit_transform(df[col].astype(str))
+print(df.head())
+
+##################### 5. Separate features and target #####################
+X = df.drop(columns="Class")
+y = df["Class"]
+
+##################### 6. EDA - IMPORTANT FEATURE PLOTTING (model er age) #####################
+imp_model = RandomForestClassifier(n_estimators=100, random_state=42)
+imp_model.fit(X, y)
+importance = pd.Series(imp_model.feature_importances_, index=X.columns).sort_values(ascending=False)
+print("\nFeature Importance:\n", importance)
+top4 = importance.index[:4]        # sobcheye important 4 ta feature
+
+fig, ax = plt.subplots(2, 3, figsize=(18, 10))
+
+# 6a. class distribution - data balanced kina dekhe
+df["Class"].value_counts().plot(kind="bar", ax=ax[0, 0], color="steelblue")
+ax[0, 0].set_title("Class Distribution")
+ax[0, 0].set_xlabel("Class")
+ax[0, 0].set_ylabel("Number of Samples")
+
+# 6b. feature importance - kon feature beshi kaje lage
+importance.plot(kind="barh", ax=ax[0, 1], color="seagreen")
+ax[0, 1].set_title("Feature Importance (Random Forest)")
+ax[0, 1].invert_yaxis()
+
+# 6c. correlation heatmap - kon feature gulo eki jinis mapche (PCA keno lagbe)
+sns.heatmap(X.corr(), ax=ax[0, 2], cmap="coolwarm", cbar=True)
+ax[0, 2].set_title("Correlation Heatmap")
+
+# 6d. top feature er histogram
+ax[1, 0].hist(X[top4[0]], bins=40, color="darkorange")
+ax[1, 0].set_title("Histogram: " + top4[0])
+ax[1, 0].set_xlabel(top4[0])
+
+# 6e. top feature class onujayi boxplot - class alada kore kina
+sns.boxplot(x=y, y=X[top4[1]], ax=ax[1, 1])
+ax[1, 1].set_title("Boxplot: " + top4[1] + " by Class")
+
+# 6f. top 2 feature er scatter
+sc1 = ax[1, 2].scatter(X[top4[0]], X[top4[1]], c=y, cmap="viridis", s=5)
+ax[1, 2].set_xlabel(top4[0])
+ax[1, 2].set_ylabel(top4[1])
+ax[1, 2].set_title("Scatter: top 2 features")
+
+plt.tight_layout()
+plt.show()
+
+##################### 7. Train test split #####################
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y,
+    test_size=0.2,
+    random_state=42
+)
+
+##################### 8. Feature scaling #####################
+scaling = StandardScaler()
+X_train = scaling.fit_transform(X_train)
+X_test = scaling.transform(X_test)   # split er por scaling, na hole data leakage hobe
+
+##################### 9. PCA - reduce dimension #####################
+print("Before PCA:", X_train.shape)
+pca = PCA(n_components=0.95)      # 95% variance rakhbe, koyta component lagbe PCA nije thik korbe
+X_train_pca = pca.fit_transform(X_train)
+X_test_pca = pca.transform(X_test)
+print("After PCA:", X_train_pca.shape)
+print("Variance kept:", pca.explained_variance_ratio_.sum())
+
+##################### 10. Model list #####################
+# ekhane sudhu ei list ta bodlabe - niche r kono code bodlate hobe na
+models = [
+    ("Logistic Regression", LogisticRegression(max_iter=1000)),
+    ("KNN", KNeighborsClassifier(n_neighbors=5)),
+    ("SVM", SVC(kernel="rbf")),
+    ("Decision Tree", DecisionTreeClassifier(random_state=42)),
+    ("Random Forest", RandomForestClassifier(n_estimators=100, random_state=42)),
+    ("Naive Bayes", GaussianNB()),
+]
+
+##################### 11. BEFORE PCA - train and predict #####################
+names = []
+acc_before = []
+all_cf = []
+
+for name, model in models:
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+
+    accuracy = accuracy_score(y_test, y_pred)
+    cf = confusion_matrix(y_test, y_pred)
+    cr = classification_report(y_test, y_pred)
+    f1_value = f1_score(y_test, y_pred, average="weighted")
+    recall_value = recall_score(y_test, y_pred, average="weighted")
+    precision_value = precision_score(y_test, y_pred, average="weighted")
+
+    print("=============== BEFORE PCA :", name, "===============")
+    print(f"Accuracy of the model is : {accuracy: .2f}")
+    print(f"F1-Score : {f1_value: .2f}")
+    print(f"Recall: {recall_value: .2f}")
+    print(f"Precision: {precision_value: .2f}")
+    print(f"Confusion_Matrix:\n{cf}")
+    print(f"Classification Report :\n{cr}")
+
+    names.append(name)
+    acc_before.append(accuracy)
+    all_cf.append(cf)
+
+##################### 12. AFTER PCA - same models again #####################
+acc_after = []
+for name, model in models:
+    model.fit(X_train_pca, y_train)
+    y_pred = model.predict(X_test_pca)
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f"=== AFTER PCA : {name} === Accuracy: {accuracy: .2f}")
+    acc_after.append(accuracy)
+
+##################### 13. Comparison table #####################
+print("\n--------- COMPARISON TABLE ---------")
+print("Model                  Before PCA   After PCA")
+for i in range(len(names)):
+    print(f"{names[i]:<22} {acc_before[i]:.4f}      {acc_after[i]:.4f}")
+
+##################### 14. Draw all confusion matrix #####################
+fig, ax = plt.subplots(2, 3, figsize=(18, 10))
+for i in range(len(models)):
+    r = i // 3
+    c = i % 3
+    ConfusionMatrixDisplay(all_cf[i]).plot(ax=ax[r, c], cmap="Blues", colorbar=False)
+    ax[r, c].set_title(names[i] + "\nAccuracy = " + str(round(acc_before[i], 3)))
+plt.tight_layout()
+plt.show()
+
+##################### 15. Draw accuracy comparison and PCA #####################
+fig, ax = plt.subplots(1, 3, figsize=(18, 5))
+
+pos = np.arange(len(names))
+ax[0].bar(pos - 0.2, acc_before, 0.4, label="Before PCA")
+ax[0].bar(pos + 0.2, acc_after, 0.4, label="After PCA")
+ax[0].set_xticks(pos)
+ax[0].set_xticklabels(names, rotation=30, fontsize=8)
+ax[0].set_ylim(0, 1)
+ax[0].set_title("Accuracy: Before vs After PCA")
+ax[0].legend()
+
+ax[1].plot(range(1, pca.n_components_ + 1), pca.explained_variance_ratio_.cumsum(), marker="o")
+ax[1].axhline(0.95, color="red", linestyle="--")
+ax[1].set_title("PCA Scree Plot")
+ax[1].set_xlabel("Components")
+ax[1].set_ylabel("Cumulative Variance")
+
+ax[2].scatter(X_train_pca[:, 0], X_train_pca[:, 1], c=y_train, cmap="viridis", s=5)
+ax[2].set_title("Data in 2D PCA space")
+ax[2].set_xlabel("PC1")
+ax[2].set_ylabel("PC2")
+
+plt.tight_layout()
+plt.show()
+
+print("BEST MODEL:", names[acc_before.index(max(acc_before))], "=", round(max(acc_before), 4))
+
+
+====================================================================================================
+ 4.2  unsupervised_all.py
+ F:\ML\unsupervised_all.py
+ Python  |  183 lines  |  6.5 KB
+====================================================================================================
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.decomposition import PCA
+from sklearn.metrics import silhouette_score, adjusted_rand_score
+
+from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
+from sklearn.mixture import GaussianMixture
+from scipy.cluster.hierarchy import dendrogram, linkage
+
+##################### 1. Load data #####################
+df = pd.read_csv("Dry_Bean.csv")
+print(df.head())
+print("Shape:", df.shape)
+
+##################### 2. Find null and duplicate values #####################
+print("Total null:", df.isnull().sum().sum())
+print("Duplicate rows:", df.duplicated().sum())
+
+##################### 3. Remove null and duplicate values #####################
+df = df.dropna()
+df = df.drop_duplicates()
+print("After cleaning:", df.shape)
+
+##################### 4. Label Encoder #####################
+le = LabelEncoder()
+for col in df.select_dtypes(exclude="number").columns:
+    df[col] = le.fit_transform(df[col].astype(str))
+
+##################### 5. Separate features and target #####################
+X = df.drop(columns="Class")
+y = df["Class"]        # sudhu ARI milanor jonno, training e use hobe na
+
+##################### 6. EDA - IMPORTANT FEATURE PLOTTING (model er age) #####################
+corr = X.corr()
+var = X.var().sort_values(ascending=False)
+print("\nTop variance features:\n", var.head())
+
+fig, ax = plt.subplots(1, 3, figsize=(18, 5))
+
+ax[0].bar(df["Class"].value_counts().index.astype(str), df["Class"].value_counts().values, color="steelblue")
+ax[0].set_title("Class Distribution")
+ax[0].set_xlabel("Class")
+ax[0].set_ylabel("Number of Samples")
+
+sns.heatmap(corr, ax=ax[1], cmap="coolwarm")
+ax[1].set_title("Correlation Heatmap (PCA keno dorkar)")
+
+ax[2].scatter(X.iloc[:, 0], X.iloc[:, 1], c=y, cmap="viridis", s=5)
+ax[2].set_xlabel(X.columns[0])
+ax[2].set_ylabel(X.columns[1])
+ax[2].set_title("Raw feature scatter")
+
+plt.tight_layout()
+plt.show()
+
+##################### 7. Feature scaling #####################
+X = StandardScaler().fit_transform(X)
+
+##################### 8. PCA - reduce dimension #####################
+p95 = PCA(n_components=0.95).fit(X)
+print("PCA(0.95) needs", p95.n_components_, "components")
+
+pca = PCA(n_components=2)     # 2D te namale DBSCAN o kaj kore, r plot o kora jay
+X = pca.fit_transform(X)
+print("After PCA:", X.shape)
+print("Variance kept:", pca.explained_variance_ratio_.sum())
+
+##################### 9. Find best K by Elbow Method #####################
+ks = list(range(1, 11))
+wcss = []
+for k in ks:
+    wcss.append(KMeans(n_clusters=k, n_init=10, random_state=42).fit(X).inertia_)
+
+# elbow = prothom o shesh point er line theke sobcheye dure thaka point
+x1, y1 = ks[0], wcss[0]
+x2, y2 = ks[-1], wcss[-1]
+dist = []
+for i in range(len(ks)):
+    d = abs((y2 - y1) * ks[i] - (x2 - x1) * wcss[i] + x2 * y1 - y2 * x1)
+    d = d / (((y2 - y1) ** 2 + (x2 - x1) ** 2) ** 0.5)
+    dist.append(d)
+best_k = ks[dist.index(max(dist))]
+print("Best K from Elbow Method:", best_k)
+
+##################### 10. Cross check by Silhouette Score #####################
+sil = []
+for k in range(2, 11):
+    labels = KMeans(n_clusters=k, n_init=10, random_state=42).fit_predict(X)
+    sil.append(silhouette_score(X, labels, sample_size=2000, random_state=42))
+print("Best K from Silhouette:", range(2, 11)[sil.index(max(sil))])
+
+##################### 11. Find best eps for DBSCAN #####################
+min_s = 50
+eps_auto = 0.25
+best_sil = -1
+print("eps    clusters   silhouette")
+for e in [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5]:
+    lb = DBSCAN(eps=e, min_samples=min_s).fit_predict(X)
+    nc = len(set(lb)) - (1 if -1 in lb else 0)
+    if nc >= 2:
+        s = silhouette_score(X, lb, sample_size=2000, random_state=42)
+        print(f"{e:<7}{nc:<11}{s: .3f}")
+        if s > best_sil:
+            best_sil = s
+            eps_auto = e
+    else:
+        print(f"{e:<7}{nc:<11}   -")
+print("Best eps selected:", eps_auto)
+
+##################### 12. Model list #####################
+# ekhane sudhu ei list ta bodlabe - niche r kono code bodlate hobe na
+models = [
+    ("KMeans", KMeans(n_clusters=best_k, n_init=10, random_state=42)),
+    ("Hierarchical", AgglomerativeClustering(n_clusters=best_k, linkage="ward")),
+    ("GMM", GaussianMixture(n_components=best_k, random_state=42)),
+    ("DBSCAN", DBSCAN(eps=eps_auto, min_samples=min_s)),
+]
+
+##################### 13. Apply all models #####################
+all_labels = []
+all_name = []
+all_ari = []
+
+for name, model in models:
+    labels = model.fit_predict(X)
+    n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
+    ari = adjusted_rand_score(y, labels)
+    if n_clusters > 1:
+        sil_value = silhouette_score(X, labels, sample_size=2000, random_state=42)
+    else:
+        sil_value = 0
+
+    print("==============================", name, "==============================")
+    print("Clusters found:", n_clusters)
+    print(f"ARI : {ari: .3f}")
+    print(f"Silhouette : {sil_value: .3f}")
+
+    all_labels.append(labels)
+    all_name.append(name)
+    all_ari.append(ari)
+
+##################### 14. Draw ALL plots in one figure #####################
+fig, ax = plt.subplots(2, 4, figsize=(22, 10))
+
+# --- row 1 : elbow, silhouette, true class, dendrogram ---
+ax[0, 0].plot(ks, wcss, marker="o")
+ax[0, 0].axvline(best_k, color="red", linestyle="--")
+ax[0, 0].set_title("Elbow Method (best K = " + str(best_k) + ")")
+ax[0, 0].set_xlabel("K")
+ax[0, 0].set_ylabel("WCSS")
+
+ax[0, 1].plot(range(2, 11), sil, marker="o", color="green")
+ax[0, 1].set_title("Silhouette Score")
+ax[0, 1].set_xlabel("K")
+ax[0, 1].set_ylabel("Silhouette")
+
+ax[0, 2].scatter(X[:, 0], X[:, 1], c=y, cmap="viridis", s=4)
+ax[0, 2].set_title("True Class (for reference)")
+ax[0, 2].set_xlabel("PC1")
+ax[0, 2].set_ylabel("PC2")
+
+# dendrogram - 13000 point er dendrogram pora jay na, tai 300 ta sample neya hoy
+sample = X[np.random.default_rng(42).choice(len(X), 300, replace=False)]
+link = linkage(sample, method="ward")
+dendrogram(link, ax=ax[0, 3], no_labels=True)
+ax[0, 3].set_title("Dendrogram (300 sample)")
+ax[0, 3].set_xlabel("Samples")
+ax[0, 3].set_ylabel("Distance")
+
+# --- row 2 : 4 ta clustering result ---
+for i in range(len(models)):
+    ax[1, i].scatter(X[:, 0], X[:, 1], c=all_labels[i], cmap="viridis", s=4)
+    ax[1, i].set_title(all_name[i] + "\nARI = " + str(round(all_ari[i], 3)))
+    ax[1, i].set_xlabel("PC1")
+    ax[1, i].set_ylabel("PC2")
+
+plt.tight_layout()
+plt.show()
+
+print("BEST CLUSTERING:", all_name[all_ari.index(max(all_ari))], "=", round(max(all_ari), 4))
+
+
+====================================================================================================
+                              END OF LISTING  -  39 files, 3,887 lines
+====================================================================================================
